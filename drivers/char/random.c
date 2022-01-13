@@ -280,6 +280,7 @@
 /* #define ADD_INTERRUPT_BENCH */
 
 /*
+<<<<<<< HEAD
  * Configuration information
  */
 #define INPUT_POOL_SHIFT	12
@@ -317,6 +318,8 @@ static int random_read_wakeup_bits = 64;
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 
 /*
+=======
+>>>>>>> 563845199476 (random: cleanup fractional entropy shift constants)
  * If the entropy count falls under this number of bits, then we
  * should wake up processes which are selecting or polling on write
  * access to /dev/random.
@@ -381,8 +384,13 @@ enum poolinfo {
 	POOL_WORDMASK = POOL_WORDS - 1,
 	POOL_BYTES = POOL_WORDS * sizeof(u32),
 	POOL_BITS = POOL_BYTES * 8,
-	POOL_BITSHIFT = ilog2(POOL_WORDS) + 5,
-	POOL_FRACBITS = POOL_WORDS << (POOL_ENTROPY_SHIFT + 5),
+	POOL_BITSHIFT = ilog2(POOL_BITS),
+
+	/* To allow fractional bits to be tracked, the entropy_count field is
+	 * denominated in units of 1/8th bits. */
+	POOL_ENTROPY_SHIFT = 3,
+#define POOL_ENTROPY_BITS() (input_pool.entropy_count >> POOL_ENTROPY_SHIFT)
+	POOL_FRACBITS = POOL_BITS << POOL_ENTROPY_SHIFT,
 
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 	/* x^128 + x^104 + x^76 + x^51 +x^25 + x + 1 */
@@ -673,6 +681,9 @@ static void credit_entropy_bits(struct entropy_store *r, int nbits)
 	int nfrac = nbits << POOL_ENTROPY_SHIFT;
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 
+	/* Ensure that the multiplication can avoid being 64 bits wide. */
+	BUILD_BUG_ON(2 * (POOL_ENTROPY_SHIFT + POOL_BITSHIFT) > 31);
+
 	if (!nbits)
 		return;
 
@@ -712,6 +723,7 @@ retry:
 		/* The +2 corresponds to the /4 in the denominator */
 
 		do {
+<<<<<<< HEAD
 			unsigned int anfrac = min(pnfrac, pool_size/2);
 			unsigned int add =
 				((pool_size - entropy_count)*anfrac*3) >> s;
@@ -719,6 +731,15 @@ retry:
 			entropy_count += add;
 			pnfrac -= anfrac;
 		} while (unlikely(entropy_count < pool_size-2 && pnfrac));
+=======
+			unsigned int anfrac = min(pnfrac, POOL_FRACBITS / 2);
+			unsigned int add =
+				((POOL_FRACBITS - entropy_count) * anfrac * 3) >> s;
+
+			entropy_count += add;
+			pnfrac -= anfrac;
+		} while (unlikely(entropy_count < POOL_FRACBITS - 2 && pnfrac));
+>>>>>>> 563845199476 (random: cleanup fractional entropy shift constants)
 	}
 
 	if (unlikely(entropy_count < 0)) {
