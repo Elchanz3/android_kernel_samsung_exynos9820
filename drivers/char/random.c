@@ -296,6 +296,7 @@
  * To allow fractional bits to be tracked, the entropy_count field is
  * denominated in units of 1/8th bits.
  *
+<<<<<<< HEAD
  * 2*(ENTROPY_SHIFT + log2(poolbits)) must <= 31, or the multiply in
  * credit_entropy_bits() needs to be 64 bits wide.
  */
@@ -307,6 +308,13 @@
  * /dev/random.  Should be enough to do a significant reseed.
  */
 static int random_read_wakeup_bits = 64;
+=======
+ * 2*(POOL_ENTROPY_SHIFT + poolbitshift) must <= 31, or the multiply in
+ * credit_entropy_bits() needs to be 64 bits wide.
+ */
+#define POOL_ENTROPY_SHIFT 3
+#define POOL_ENTROPY_BITS() (input_pool.entropy_count >> POOL_ENTROPY_SHIFT)
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 
 /*
  * If the entropy count falls under this number of bits, then we
@@ -360,12 +368,23 @@ static int random_write_wakeup_bits = 28 * OUTPUT_POOL_WORDS;
  * polynomial which improves the resulting TGFSR polynomial to be
  * irreducible, which we have made here.
  */
+<<<<<<< HEAD
 static struct poolinfo {
 	int poolbitshift, poolwords, poolbytes, poolbits, poolfracbits;
 #define S(x) ilog2(x)+5, (x), (x)*4, (x)*32, (x) << (ENTROPY_SHIFT+5)
 	int tap1, tap2, tap3, tap4, tap5;
 } poolinfo_table[] = {
 	/* was: x^128 + x^103 + x^76 + x^51 +x^25 + x + 1 */
+=======
+enum poolinfo {
+	POOL_WORDS = 128,
+	POOL_WORDMASK = POOL_WORDS - 1,
+	POOL_BYTES = POOL_WORDS * sizeof(u32),
+	POOL_BITS = POOL_BYTES * 8,
+	POOL_BITSHIFT = ilog2(POOL_WORDS) + 5,
+	POOL_FRACBITS = POOL_WORDS << (POOL_ENTROPY_SHIFT + 5),
+
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 	/* x^128 + x^104 + x^76 + x^51 +x^25 + x + 1 */
 	{ S(128),	104,	76,	51,	25,	1 },
 	/* was: x^32 + x^26 + x^20 + x^14 + x^7 + x + 1 */
@@ -645,9 +664,14 @@ static void process_random_ready_list(void)
  */
 static void credit_entropy_bits(struct entropy_store *r, int nbits)
 {
+<<<<<<< HEAD
 	int entropy_count, orig;
 	const int pool_size = r->poolinfo->poolfracbits;
 	int nfrac = nbits << ENTROPY_SHIFT;
+=======
+	int entropy_count, entropy_bits, orig;
+	int nfrac = nbits << POOL_ENTROPY_SHIFT;
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 
 	if (!nbits)
 		return;
@@ -680,7 +704,11 @@ retry:
 		 * turns no matter how large nbits is.
 		 */
 		int pnfrac = nfrac;
+<<<<<<< HEAD
 		const int s = r->poolinfo->poolbitshift + ENTROPY_SHIFT + 2;
+=======
+		const int s = POOL_BITSHIFT + POOL_ENTROPY_SHIFT + 2;
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 		/* The +2 corresponds to the /4 in the denominator */
 
 		do {
@@ -703,6 +731,7 @@ retry:
 	if (cmpxchg(&r->entropy_count, orig, entropy_count) != orig)
 		goto retry;
 
+<<<<<<< HEAD
 	r->entropy_total += nbits;
 	if (!r->initialized && r->entropy_total > 128) {
 		r->initialized = 1;
@@ -741,6 +770,13 @@ retry:
 			}
 		}
 	}
+=======
+	trace_credit_entropy_bits(nbits, entropy_count >> POOL_ENTROPY_SHIFT, _RET_IP_);
+
+	entropy_bits = entropy_count >> POOL_ENTROPY_SHIFT;
+	if (crng_init < 2 && entropy_bits >= 128)
+		crng_reseed(&primary_crng, true);
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 }
 
 static int credit_entropy_bits_safe(struct entropy_store *r, int nbits)
@@ -1185,7 +1221,11 @@ void add_input_randomness(unsigned int type, unsigned int code,
 	last_value = value;
 	add_timer_randomness(&input_timer_state,
 			     (type << 4) ^ code ^ (code >> 4) ^ value);
+<<<<<<< HEAD
 	trace_add_input_randomness(ENTROPY_BITS(&input_pool));
+=======
+	trace_add_input_randomness(POOL_ENTROPY_BITS());
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 }
 EXPORT_SYMBOL_GPL(add_input_randomness);
 
@@ -1300,7 +1340,11 @@ void add_disk_randomness(struct gendisk *disk)
 		return;
 	/* first major is 1, so we get >= 0x200 here */
 	add_timer_randomness(disk->random, 0x100 + disk_devt(disk));
+<<<<<<< HEAD
 	trace_add_disk_randomness(disk_devt(disk), ENTROPY_BITS(&input_pool));
+=======
+	trace_add_disk_randomness(disk_devt(disk), POOL_ENTROPY_BITS());
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 }
 EXPORT_SYMBOL_GPL(add_disk_randomness);
 #endif
@@ -1379,7 +1423,7 @@ retry:
 	entropy_count = orig = ACCESS_ONCE(r->entropy_count);
 	ibytes = nbytes;
 	/* never pull more than available */
-	have_bytes = entropy_count >> (ENTROPY_SHIFT + 3);
+	have_bytes = entropy_count >> (POOL_ENTROPY_SHIFT + 3);
 
 	if ((have_bytes -= reserved) < 0)
 		have_bytes = 0;
@@ -1393,7 +1437,7 @@ retry:
 		WARN_ON(1);
 		entropy_count = 0;
 	}
-	nfrac = ibytes << (ENTROPY_SHIFT + 3);
+	nfrac = ibytes << (POOL_ENTROPY_SHIFT + 3);
 	if ((size_t) entropy_count > nfrac)
 		entropy_count -= nfrac;
 	else
@@ -1402,9 +1446,14 @@ retry:
 	if (cmpxchg(&r->entropy_count, orig, entropy_count) != orig)
 		goto retry;
 
+<<<<<<< HEAD
 	trace_debit_entropy(r->name, 8 * ibytes);
 	if (ibytes &&
 	    (r->entropy_count >> ENTROPY_SHIFT) < random_write_wakeup_bits) {
+=======
+	trace_debit_entropy(8 * ibytes);
+	if (ibytes && POOL_ENTROPY_BITS() < random_write_wakeup_bits) {
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 		wake_up_interruptible(&random_write_wait);
 		kill_fasync(&fasync, SIGIO, POLL_OUT);
 	}
@@ -1514,6 +1563,7 @@ static ssize_t _extract_entropy(struct entropy_store *r, void *buf,
 static ssize_t extract_entropy(struct entropy_store *r, void *buf,
 				 size_t nbytes, int min, int reserved)
 {
+<<<<<<< HEAD
 	__u8 tmp[EXTRACT_SIZE];
 	unsigned long flags;
 
@@ -1581,6 +1631,11 @@ static ssize_t extract_entropy_user(struct entropy_store *r, void __user *buf,
 	memzero_explicit(tmp, sizeof(tmp));
 
 	return ret;
+=======
+	trace_extract_entropy(nbytes, POOL_ENTROPY_BITS(), _RET_IP_);
+	nbytes = account(nbytes, min);
+	return _extract_entropy(buf, nbytes);
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 }
 
 #define warn_unseeded_randomness(previous) \
@@ -1889,8 +1944,16 @@ _random_read(int nonblock, char __user *buf, size_t nbytes)
 {
 	ssize_t n;
 
+<<<<<<< HEAD
 	if (nbytes == 0)
 		return 0;
+=======
+	nbytes = min_t(size_t, nbytes, INT_MAX >> (POOL_ENTROPY_SHIFT + 3));
+	ret = extract_crng_user(buf, nbytes);
+	trace_urandom_read(8 * nbytes, 0, POOL_ENTROPY_BITS());
+	return ret;
+}
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 
 	nbytes = min_t(size_t, nbytes, SEC_XFER_SIZE);
 	while (1) {
@@ -1954,7 +2017,11 @@ random_poll(struct file *file, poll_table * wait)
 	mask = 0;
 	if (ENTROPY_BITS(&input_pool) >= random_read_wakeup_bits)
 		mask |= POLLIN | POLLRDNORM;
+<<<<<<< HEAD
 	if (ENTROPY_BITS(&input_pool) < random_write_wakeup_bits)
+=======
+	if (POOL_ENTROPY_BITS() < random_write_wakeup_bits)
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 		mask |= POLLOUT | POLLWRNORM;
 	return mask;
 }
@@ -2010,7 +2077,11 @@ static long random_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 	switch (cmd) {
 	case RNDGETENTCNT:
 		/* inherently racy, no point locking */
+<<<<<<< HEAD
 		ent_count = ENTROPY_BITS(&input_pool);
+=======
+		ent_count = POOL_ENTROPY_BITS();
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 		if (put_user(ent_count, p))
 			return -EFAULT;
 		return 0;
@@ -2165,7 +2236,7 @@ static int proc_do_entropy(struct ctl_table *table, int write,
 	struct ctl_table fake_table;
 	int entropy_count;
 
-	entropy_count = *(int *)table->data >> ENTROPY_SHIFT;
+	entropy_count = *(int *)table->data >> POOL_ENTROPY_SHIFT;
 
 	fake_table.data = &entropy_count;
 	fake_table.maxlen = sizeof(entropy_count);
@@ -2389,9 +2460,17 @@ void add_hwgenerator_randomness(const char *buffer, size_t count,
 	 * We'll be woken up again once below random_write_wakeup_thresh,
 	 * or when the calling thread is about to terminate.
 	 */
+<<<<<<< HEAD
 	wait_event_freezable(random_write_wait, kthread_should_stop() ||
 			ENTROPY_BITS(&input_pool) <= random_write_wakeup_bits);
 	mix_pool_bytes(poolp, buffer, count);
 	credit_entropy_bits(poolp, entropy);
+=======
+	wait_event_interruptible(random_write_wait,
+			!system_wq || kthread_should_stop() ||
+			POOL_ENTROPY_BITS() <= random_write_wakeup_bits);
+	mix_pool_bytes(buffer, count);
+	credit_entropy_bits(entropy);
+>>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 }
 EXPORT_SYMBOL_GPL(add_hwgenerator_randomness);
