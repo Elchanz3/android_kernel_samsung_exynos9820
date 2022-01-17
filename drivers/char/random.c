@@ -1661,13 +1661,14 @@ static void push_to_pool(struct work_struct *work)
 static size_t account(struct entropy_store *r, size_t nbytes, int min,
 		      int reserved)
 {
-	int entropy_count, orig, have_bytes;
+	int entropy_count, orig;
 	size_t ibytes, nfrac;
 
 	BUG_ON(r->entropy_count > r->poolinfo->poolfracbits);
 
 	/* Can we pull enough? */
 retry:
+<<<<<<< HEAD
 	entropy_count = orig = ACCESS_ONCE(r->entropy_count);
 	ibytes = nbytes;
 	/* never pull more than available */
@@ -1683,8 +1684,18 @@ retry:
 		pr_warn("random: negative entropy count: pool %s count %d\n",
 			r->name, entropy_count);
 		WARN_ON(1);
+=======
+	entropy_count = orig = READ_ONCE(input_pool.entropy_count);
+	if (WARN_ON(entropy_count < 0)) {
+		pr_warn("negative entropy count: count %d\n", entropy_count);
+>>>>>>> 5c539eee39b2 (random: simplify arithmetic function flow in account())
 		entropy_count = 0;
 	}
+
+	/* never pull more than available */
+	ibytes = min_t(size_t, nbytes, entropy_count >> (POOL_ENTROPY_SHIFT + 3));
+	if (ibytes < min)
+		ibytes = 0;
 	nfrac = ibytes << (POOL_ENTROPY_SHIFT + 3);
 	if ((size_t)entropy_count > nfrac)
 		entropy_count -= nfrac;
