@@ -2754,10 +2754,12 @@ void add_hwgenerator_randomness(const char *buffer, size_t count,
 		return;
 	}
 
-	/* Suspend writing if we're above the trickle threshold.
+	/* Throttle writing if we're above the trickle threshold.
 	 * We'll be woken up again once below random_write_wakeup_thresh,
-	 * or when the calling thread is about to terminate.
+	 * when the calling thread is about to terminate, or once
+	 * CRNG_RESEED_INTERVAL has lapsed.
 	 */
+<<<<<<< HEAD
 <<<<<<< HEAD
 	wait_event_freezable(random_write_wait, kthread_should_stop() ||
 			ENTROPY_BITS(&input_pool) <= random_write_wakeup_bits);
@@ -2765,8 +2767,12 @@ void add_hwgenerator_randomness(const char *buffer, size_t count,
 	credit_entropy_bits(poolp, entropy);
 =======
 	wait_event_interruptible(random_write_wait,
+=======
+	wait_event_interruptible_timeout(random_write_wait,
+>>>>>>> 35e312919dd9 (random: continually use hwgenerator randomness)
 			!system_wq || kthread_should_stop() ||
-			POOL_ENTROPY_BITS() <= random_write_wakeup_bits);
+			POOL_ENTROPY_BITS() <= random_write_wakeup_bits,
+			CRNG_RESEED_INTERVAL);
 	mix_pool_bytes(buffer, count);
 	credit_entropy_bits(entropy);
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
