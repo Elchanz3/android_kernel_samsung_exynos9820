@@ -1035,7 +1035,39 @@ static void __init crng_initialize_primary(void)
 >>>>>>> 7beef135045b (random: access primary_pool directly rather than through pointer)
 }
 
+<<<<<<< HEAD
 #ifdef CONFIG_NUMA
+=======
+static void crng_finalize_init(void)
+{
+	if (!system_wq) {
+		/* We can't call numa_crng_init until we have workqueues,
+		 * so mark this for processing later. */
+		crng_need_final_init = true;
+		return;
+	}
+
+	invalidate_batched_entropy();
+	numa_crng_init();
+	crng_init = 2;
+	crng_need_final_init = false;
+	process_random_ready_list();
+	wake_up_interruptible(&crng_init_wait);
+	kill_fasync(&fasync, SIGIO, POLL_IN);
+	pr_notice("crng init done\n");
+	if (unseeded_warning.missed) {
+		pr_notice("%d get_random_xx warning(s) missed due to ratelimiting\n",
+			  unseeded_warning.missed);
+		unseeded_warning.missed = 0;
+	}
+	if (urandom_warning.missed) {
+		pr_notice("%d urandom warning(s) missed due to ratelimiting\n",
+			  urandom_warning.missed);
+		urandom_warning.missed = 0;
+	}
+}
+
+>>>>>>> 7ad714b9dced (random: only call crng_finalize_init() for primary_crng)
 static void do_numa_crng_init(struct work_struct *work)
 {
 	int i;
@@ -1208,6 +1240,7 @@ static void crng_reseed(struct crng_state *crng, struct entropy_store *r)
 	memzero_explicit(&buf, sizeof(buf));
 	WRITE_ONCE(crng->init_time, jiffies);
 	spin_unlock_irqrestore(&crng->lock, flags);
+<<<<<<< HEAD
 	if (crng == &primary_crng && crng_init < 2) {
 		invalidate_batched_entropy();
 		numa_crng_init();
@@ -1228,6 +1261,10 @@ static void crng_reseed(struct crng_state *crng, struct entropy_store *r)
 			urandom_warning.missed = 0;
 		}
 	}
+=======
+	if (crng == &primary_crng && crng_init < 2)
+		crng_finalize_init();
+>>>>>>> 7ad714b9dced (random: only call crng_finalize_init() for primary_crng)
 }
 
 <<<<<<< HEAD
@@ -2194,7 +2231,7 @@ static int rand_initialize(void)
 =======
 	init_std_data();
 	if (crng_need_final_init)
-		crng_finalize_init(&primary_crng);
+		crng_finalize_init();
 	crng_initialize_primary();
 >>>>>>> 7beef135045b (random: access primary_pool directly rather than through pointer)
 	crng_global_init_time = jiffies;
