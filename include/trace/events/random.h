@@ -110,6 +110,7 @@ TRACE_EVENT(push_to_pool,
 		  __entry->input_bits)
 );
 
+<<<<<<< HEAD
 TRACE_EVENT(debit_entropy,
 	TP_PROTO(const char *pool_name, int debit_bits),
 
@@ -129,6 +130,8 @@ TRACE_EVENT(debit_entropy,
 		  __entry->debit_bits)
 );
 
+=======
+>>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 TRACE_EVENT(add_input_randomness,
 	TP_PROTO(int input_bits),
 
@@ -224,32 +227,42 @@ DEFINE_EVENT(random__get_random_bytes, get_random_bytes_arch,
 );
 
 DECLARE_EVENT_CLASS(random__extract_entropy,
+<<<<<<< HEAD
 	TP_PROTO(const char *pool_name, int nbytes, int entropy_count,
 		 unsigned long IP),
 
 	TP_ARGS(pool_name, nbytes, entropy_count, IP),
+=======
+	TP_PROTO(int nbytes, int entropy_count),
+
+	TP_ARGS(nbytes, entropy_count),
+>>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 
 	TP_STRUCT__entry(
 		__field( const char *,	pool_name		)
 		__field(	  int,	nbytes			)
 		__field(	  int,	entropy_count		)
-		__field(unsigned long,	IP			)
 	),
 
 	TP_fast_assign(
 		__entry->pool_name	= pool_name;
 		__entry->nbytes		= nbytes;
 		__entry->entropy_count	= entropy_count;
-		__entry->IP		= IP;
 	),
 
+<<<<<<< HEAD
 	TP_printk("%s pool: nbytes %d entropy_count %d caller %pS",
 		  __entry->pool_name, __entry->nbytes, __entry->entropy_count,
 		  (void *)__entry->IP)
+=======
+	TP_printk("input pool: nbytes %d entropy_count %d",
+		  __entry->nbytes, __entry->entropy_count)
+>>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 );
 
 
 DEFINE_EVENT(random__extract_entropy, extract_entropy,
+<<<<<<< HEAD
 	TP_PROTO(const char *pool_name, int nbytes, int entropy_count,
 		 unsigned long IP),
 
@@ -286,6 +299,11 @@ TRACE_EVENT(random_read,
 		  "blocking_pool_entropy_left %d input_entropy_left %d",
 		  __entry->got_bits, __entry->got_bits, __entry->pool_left,
 		  __entry->input_left)
+=======
+	TP_PROTO(int nbytes, int entropy_count),
+
+	TP_ARGS(nbytes, entropy_count)
+>>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 );
 
 TRACE_EVENT(urandom_read,

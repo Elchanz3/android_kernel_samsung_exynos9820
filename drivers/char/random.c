@@ -453,11 +453,13 @@ static struct poolinfo {
 enum poolinfo {
 	POOL_BITS = BLAKE2S_HASH_SIZE * 8,
 	POOL_BITSHIFT = ilog2(POOL_BITS),
+	POOL_MIN_BITS = POOL_BITS / 2,
 
 	/* To allow fractional bits to be tracked, the entropy_count field is
 	 * denominated in units of 1/8th bits. */
 	POOL_ENTROPY_SHIFT = 3,
 #define POOL_ENTROPY_BITS() (input_pool.entropy_count >> POOL_ENTROPY_SHIFT)
+<<<<<<< HEAD
 <<<<<<< HEAD
 	POOL_FRACBITS = POOL_BITS << POOL_ENTROPY_SHIFT,
 
@@ -497,6 +499,10 @@ enum poolinfo {
 =======
 	POOL_FRACBITS = POOL_BITS << POOL_ENTROPY_SHIFT
 >>>>>>> ccf535b5077a (random: use computational hash for entropy extraction)
+=======
+	POOL_FRACBITS = POOL_BITS << POOL_ENTROPY_SHIFT,
+	POOL_MIN_FRACBITS = POOL_MIN_BITS << POOL_ENTROPY_SHIFT
+>>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 };
 
 /*
@@ -639,9 +645,13 @@ static struct {
 	.lock = __SPIN_LOCK_UNLOCKED(input_pool.lock),
 };
 
+<<<<<<< HEAD
 static bool extract_entropy(void *buf, size_t nbytes, int min);
 static void _extract_entropy(void *buf, size_t nbytes);
 >>>>>>> ccf535b5077a (random: use computational hash for entropy extraction)
+=======
+static void extract_entropy(void *buf, size_t nbytes);
+>>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 
 <<<<<<< HEAD
 static __u32 const twist_table[8] = {
@@ -811,11 +821,15 @@ static void process_random_ready_list(void)
 static void credit_entropy_bits(struct entropy_store *r, int nbits)
 {
 <<<<<<< HEAD
+<<<<<<< HEAD
 	int entropy_count, orig;
 	const int pool_size = r->poolinfo->poolfracbits;
 	int nfrac = nbits << ENTROPY_SHIFT;
 =======
 	int entropy_count, entropy_bits, orig;
+=======
+	int entropy_count, orig;
+>>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 	int nfrac = nbits << POOL_ENTROPY_SHIFT;
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 
@@ -932,8 +946,7 @@ retry:
 =======
 	trace_credit_entropy_bits(nbits, entropy_count >> POOL_ENTROPY_SHIFT, _RET_IP_);
 
-	entropy_bits = entropy_count >> POOL_ENTROPY_SHIFT;
-	if (crng_init < 2 && entropy_bits >= 128)
+	if (crng_init < 2 && entropy_count >= POOL_MIN_FRACBITS)
 		crng_reseed(&primary_crng, true);
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 }
@@ -1035,7 +1048,7 @@ static void crng_initialize_secondary(struct crng_state *crng)
 
 static void __init crng_initialize_primary(void)
 {
-	_extract_entropy(&primary_crng.state[4], sizeof(u32) * 12);
+	extract_entropy(&primary_crng.state[4], sizeof(u32) * 12);
 	if (crng_init_try_arch_early() && trust_cpu && crng_init < 2) {
 		invalidate_batched_entropy();
 		numa_crng_init();
@@ -1241,9 +1254,23 @@ static void crng_reseed(struct crng_state *crng, struct entropy_store *r)
 		if (num == 0)
 =======
 	if (use_input_pool) {
+<<<<<<< HEAD
 		if (!extract_entropy(&buf, 32, 16))
 >>>>>>> ccf535b5077a (random: use computational hash for entropy extraction)
 			return;
+=======
+		int entropy_count;
+		do {
+			entropy_count = READ_ONCE(input_pool.entropy_count);
+			if (entropy_count < POOL_MIN_FRACBITS)
+				return;
+		} while (cmpxchg(&input_pool.entropy_count, entropy_count, 0) != entropy_count);
+		extract_entropy(buf.key, sizeof(buf.key));
+		if (random_write_wakeup_bits) {
+			wake_up_interruptible(&random_write_wait);
+			kill_fasync(&fasync, SIGIO, POLL_OUT);
+		}
+>>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 	} else {
 		_extract_crng(&primary_crng, buf.block);
 		_crng_backtrack_protect(&primary_crng, buf.block,
@@ -1665,6 +1692,7 @@ EXPORT_SYMBOL_GPL(add_disk_randomness);
  *********************************************************************/
 
 /*
+<<<<<<< HEAD
  * This utility inline function is responsible for transferring entropy
  * from the primary pool to the secondary extraction pool. We make
  * sure we pull enough for a 'catastrophic reseed'.
@@ -1797,10 +1825,12 @@ static void extract_buf(struct entropy_store *r, __u8 *out)
 	} hash;
 	__u32 workspace[SHA_WORKSPACE_WORDS];
 =======
+=======
+>>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
  * This is an HKDF-like construction for using the hashed collected entropy
  * as a PRF key, that's then expanded block-by-block.
  */
-static void _extract_entropy(void *buf, size_t nbytes)
+static void extract_entropy(void *buf, size_t nbytes)
 {
 >>>>>>> ccf535b5077a (random: use computational hash for entropy extraction)
 	unsigned long flags;
@@ -1811,6 +1841,7 @@ static void _extract_entropy(void *buf, size_t nbytes)
 	} block;
 	size_t i;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 	/*
 	 * If we have an architectural hardware random number
@@ -1883,6 +1914,10 @@ static ssize_t _extract_entropy(struct entropy_store *r, void *buf,
 		i = min_t(int, nbytes, EXTRACT_SIZE);
 		memcpy(buf, tmp, i);
 =======
+=======
+	trace_extract_entropy(nbytes, POOL_ENTROPY_BITS());
+
+>>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 	for (i = 0; i < ARRAY_SIZE(block.rdrand); ++i) {
 		if (!arch_get_random_long(&block.rdrand[i]))
 			block.rdrand[i] = random_get_entropy();
@@ -1915,6 +1950,7 @@ static ssize_t _extract_entropy(struct entropy_store *r, void *buf,
 	memzero_explicit(&block, sizeof(block));
 }
 
+<<<<<<< HEAD
 /*
  * This function extracts randomness from the "entropy pool", and
  * returns it in a buffer.
@@ -2018,6 +2054,8 @@ static ssize_t extract_entropy_user(struct entropy_store *r, void __user *buf,
 >>>>>>> ccf535b5077a (random: use computational hash for entropy extraction)
 }
 
+=======
+>>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 #define warn_unseeded_randomness(previous) \
 	_warn_unseeded_randomness(__func__, (void *)_RET_IP_, (previous))
 
