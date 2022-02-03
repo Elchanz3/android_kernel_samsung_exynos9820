@@ -348,6 +348,7 @@
 /* #define ADD_INTERRUPT_BENCH */
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 /*
 <<<<<<< HEAD
  * Configuration information
@@ -503,6 +504,11 @@ enum poolinfo {
 	POOL_FRACBITS = POOL_BITS << POOL_ENTROPY_SHIFT,
 	POOL_MIN_FRACBITS = POOL_MIN_BITS << POOL_ENTROPY_SHIFT
 >>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
+=======
+enum {
+	POOL_BITS = BLAKE2S_HASH_SIZE * 8,
+	POOL_MIN_BITS = POOL_BITS /* No point in settling for less. */
+>>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 };
 
 /*
@@ -516,7 +522,7 @@ static struct fasync_struct *fasync;
  * should wake up processes which are selecting or polling on write
  * access to /dev/random.
  */
-static int random_write_wakeup_bits = POOL_BITS * 3 / 4;
+static int random_write_wakeup_bits = POOL_MIN_BITS;
 
 static DEFINE_SPINLOCK(random_ready_list_lock);
 static LIST_HEAD(random_ready_list);
@@ -823,6 +829,7 @@ static void credit_entropy_bits(struct entropy_store *r, int nbits)
 <<<<<<< HEAD
 <<<<<<< HEAD
 	int entropy_count, orig;
+<<<<<<< HEAD
 	const int pool_size = r->poolinfo->poolfracbits;
 	int nfrac = nbits << ENTROPY_SHIFT;
 =======
@@ -835,10 +842,13 @@ static void credit_entropy_bits(struct entropy_store *r, int nbits)
 
 	/* Ensure that the multiplication can avoid being 64 bits wide. */
 	BUILD_BUG_ON(2 * (POOL_ENTROPY_SHIFT + POOL_BITSHIFT) > 31);
+=======
+>>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 
 	if (!nbits)
 		return;
 
+<<<<<<< HEAD
 retry:
 	entropy_count = orig = ACCESS_ONCE(r->entropy_count);
 	if (nfrac < 0) {
@@ -947,6 +957,16 @@ retry:
 	trace_credit_entropy_bits(nbits, entropy_count >> POOL_ENTROPY_SHIFT, _RET_IP_);
 
 	if (crng_init < 2 && entropy_count >= POOL_MIN_FRACBITS)
+=======
+	do {
+		orig = READ_ONCE(input_pool.entropy_count);
+		entropy_count = min(POOL_BITS, orig + nbits);
+	} while (cmpxchg(&input_pool.entropy_count, orig, entropy_count) != orig);
+
+	trace_credit_entropy_bits(nbits, entropy_count, _RET_IP_);
+
+	if (crng_init < 2 && entropy_count >= POOL_MIN_BITS)
+>>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 		crng_reseed(&primary_crng, true);
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 }
@@ -1262,7 +1282,7 @@ static void crng_reseed(struct crng_state *crng, struct entropy_store *r)
 		int entropy_count;
 		do {
 			entropy_count = READ_ONCE(input_pool.entropy_count);
-			if (entropy_count < POOL_MIN_FRACBITS)
+			if (entropy_count < POOL_MIN_BITS)
 				return;
 		} while (cmpxchg(&input_pool.entropy_count, entropy_count, 0) != entropy_count);
 		extract_entropy(buf.key, sizeof(buf.key));
@@ -1546,10 +1566,14 @@ void add_input_randomness(unsigned int type, unsigned int code,
 	add_timer_randomness(&input_timer_state,
 			     (type << 4) ^ code ^ (code >> 4) ^ value);
 <<<<<<< HEAD
+<<<<<<< HEAD
 	trace_add_input_randomness(ENTROPY_BITS(&input_pool));
 =======
 	trace_add_input_randomness(POOL_ENTROPY_BITS());
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
+=======
+	trace_add_input_randomness(input_pool.entropy_count);
+>>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 }
 EXPORT_SYMBOL_GPL(add_input_randomness);
 
@@ -1677,10 +1701,14 @@ void add_disk_randomness(struct gendisk *disk)
 	/* first major is 1, so we get >= 0x200 here */
 	add_timer_randomness(disk->random, 0x100 + disk_devt(disk));
 <<<<<<< HEAD
+<<<<<<< HEAD
 	trace_add_disk_randomness(disk_devt(disk), ENTROPY_BITS(&input_pool));
 =======
 	trace_add_disk_randomness(disk_devt(disk), POOL_ENTROPY_BITS());
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
+=======
+	trace_add_disk_randomness(disk_devt(disk), input_pool.entropy_count);
+>>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 }
 EXPORT_SYMBOL_GPL(add_disk_randomness);
 #endif
@@ -1843,6 +1871,7 @@ static void extract_entropy(void *buf, size_t nbytes)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	/*
 	 * If we have an architectural hardware random number
 	 * generator, use it for SHA's initial vector
@@ -1916,6 +1945,9 @@ static ssize_t _extract_entropy(struct entropy_store *r, void *buf,
 =======
 =======
 	trace_extract_entropy(nbytes, POOL_ENTROPY_BITS());
+=======
+	trace_extract_entropy(nbytes, input_pool.entropy_count);
+>>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 
 >>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 	for (i = 0; i < ARRAY_SIZE(block.rdrand); ++i) {
@@ -2387,12 +2419,16 @@ static ssize_t urandom_read_nowarn(struct file *file, char __user *buf,
 	ssize_t n;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	if (nbytes == 0)
 		return 0;
 =======
 	nbytes = min_t(size_t, nbytes, INT_MAX >> (POOL_ENTROPY_SHIFT + 3));
+=======
+	nbytes = min_t(size_t, nbytes, INT_MAX >> 6);
+>>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 	ret = extract_crng_user(buf, nbytes);
-	trace_urandom_read(8 * nbytes, 0, POOL_ENTROPY_BITS());
+	trace_urandom_read(8 * nbytes, 0, input_pool.entropy_count);
 	return ret;
 }
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
@@ -2466,10 +2502,14 @@ static unsigned int random_poll(struct file *file, poll_table *wait)
 	if (ENTROPY_BITS(&input_pool) >= random_read_wakeup_bits)
 		mask |= POLLIN | POLLRDNORM;
 <<<<<<< HEAD
+<<<<<<< HEAD
 	if (ENTROPY_BITS(&input_pool) < random_write_wakeup_bits)
 =======
 	if (POOL_ENTROPY_BITS() < random_write_wakeup_bits)
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
+=======
+	if (input_pool.entropy_count < random_write_wakeup_bits)
+>>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 		mask |= POLLOUT | POLLWRNORM;
 	return mask;
 }
@@ -2530,11 +2570,15 @@ static long random_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 	case RNDGETENTCNT:
 		/* inherently racy, no point locking */
 <<<<<<< HEAD
+<<<<<<< HEAD
 		ent_count = ENTROPY_BITS(&input_pool);
 =======
 		ent_count = POOL_ENTROPY_BITS();
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 		if (put_user(ent_count, p))
+=======
+		if (put_user(input_pool.entropy_count, p))
+>>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 			return -EFAULT;
 		return 0;
 	case RNDADDTOENTCNT:
@@ -2690,6 +2734,7 @@ static int proc_do_uuid(struct ctl_table *table, int write,
 	return proc_dostring(&fake_table, write, buffer, lenp, ppos);
 }
 
+<<<<<<< HEAD
 /*
  * Return entropy available scaled to integral bits
  */
@@ -2708,6 +2753,9 @@ static int proc_do_entropy(struct ctl_table *table, int write,
 }
 
 static int sysctl_poolsize = INPUT_POOL_WORDS * 32;
+=======
+static int sysctl_poolsize = POOL_BITS;
+>>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 extern struct ctl_table random_table[];
 struct ctl_table random_table[] = {
 	{
@@ -2719,10 +2767,10 @@ struct ctl_table random_table[] = {
 	},
 	{
 		.procname	= "entropy_avail",
+		.data		= &input_pool.entropy_count,
 		.maxlen		= sizeof(int),
 		.mode		= 0444,
-		.proc_handler	= proc_do_entropy,
-		.data		= &input_pool.entropy_count,
+		.proc_handler	= proc_dointvec,
 	},
 	{
 		.procname	= "read_wakeup_threshold",
@@ -2935,7 +2983,7 @@ void add_hwgenerator_randomness(const char *buffer, size_t count,
 	wait_event_interruptible_timeout(random_write_wait,
 >>>>>>> 35e312919dd9 (random: continually use hwgenerator randomness)
 			!system_wq || kthread_should_stop() ||
-			POOL_ENTROPY_BITS() <= random_write_wakeup_bits,
+			input_pool.entropy_count <= random_write_wakeup_bits,
 			CRNG_RESEED_INTERVAL);
 	mix_pool_bytes(buffer, count);
 	credit_entropy_bits(entropy);
