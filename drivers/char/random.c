@@ -2641,9 +2641,10 @@ struct fast_pool {
 		u32 pool32[4];
 		u64 pool64[2];
 	};
+	struct work_struct mix;
 	unsigned long last;
+	atomic_t count;
 	u16 reg_idx;
-	u8 count;
 };
 
 /*
@@ -2722,6 +2723,7 @@ static u32 get_reg(struct fast_pool *f, struct pt_regs *regs)
 	return *ptr;
 }
 
+<<<<<<< HEAD
 void add_interrupt_randomness(int irq, int irq_flags)
 {
 <<<<<<< HEAD
@@ -2735,16 +2737,60 @@ void add_interrupt_randomness(int irq, int irq_flags)
 	unsigned long		seed;
 	int			credit = 0;
 =======
+=======
+static void mix_interrupt_randomness(struct work_struct *work)
+{
+	struct fast_pool *fast_pool = container_of(work, struct fast_pool, mix);
+	u32 pool[4];
+
+	/* Check to see if we're running on the wrong CPU due to hotplug. */
+	local_irq_disable();
+	if (fast_pool != this_cpu_ptr(&irq_randomness)) {
+		local_irq_enable();
+		/*
+		 * If we are unlucky enough to have been moved to another CPU,
+		 * during CPU hotplug while the CPU was shutdown then we set
+		 * our count to zero atomically so that when the CPU comes
+		 * back online, it can enqueue work again. The _release here
+		 * pairs with the atomic_inc_return_acquire in
+		 * add_interrupt_randomness().
+		 */
+		atomic_set_release(&fast_pool->count, 0);
+		return;
+	}
+
+	/*
+	 * Copy the pool to the stack so that the mixer always has a
+	 * consistent view, before we reenable irqs again.
+	 */
+	memcpy(pool, fast_pool->pool32, sizeof(pool));
+	atomic_set(&fast_pool->count, 0);
+	fast_pool->last = jiffies;
+	local_irq_enable();
+
+	mix_pool_bytes(pool, sizeof(pool));
+	credit_entropy_bits(1);
+	memzero_explicit(pool, sizeof(pool));
+}
+
+void add_interrupt_randomness(int irq)
+{
+	enum { MIX_INFLIGHT = 1U << 31 };
+>>>>>>> 80adfc1fa691 (random: defer fast pool mixing to worker)
 	struct fast_pool *fast_pool = this_cpu_ptr(&irq_randomness);
 	struct pt_regs *regs = get_irq_regs();
 	unsigned long now = jiffies;
 	cycles_t cycles = random_get_entropy();
+<<<<<<< HEAD
 <<<<<<< HEAD
 	u32 c_high, j_high;
 	u64 ip;
 >>>>>>> 166f9970b82a (random: access input_pool_data directly rather than through pointer)
 =======
 >>>>>>> e0a5363f51f5 (random: deobfuscate irq u32/u64 contributions)
+=======
+	unsigned int new_count;
+>>>>>>> 80adfc1fa691 (random: defer fast pool mixing to worker)
 
 	if (cycles == 0)
 		cycles = get_reg(fast_pool, regs);
@@ -2764,9 +2810,11 @@ void add_interrupt_randomness(int irq, int irq_flags)
 	}
 
 	fast_mix(fast_pool->pool32);
-	++fast_pool->count;
+	/* The _acquire here pairs with the atomic_set_release in mix_interrupt_randomness(). */
+	new_count = (unsigned int)atomic_inc_return_acquire(&fast_pool->count);
 
 	if (unlikely(crng_init == 0)) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 		if ((fast_pool->count >= 64) &&
 		    crng_fast_load((char *) fast_pool->pool,
@@ -2780,6 +2828,11 @@ void add_interrupt_randomness(int irq, int irq_flags)
 		    crng_fast_load(fast_pool->pool32, sizeof(fast_pool->pool32)) > 0) {
 >>>>>>> e0a5363f51f5 (random: deobfuscate irq u32/u64 contributions)
 			fast_pool->count = 0;
+=======
+		if (new_count >= 64 &&
+		    crng_fast_load(fast_pool->pool32, sizeof(fast_pool->pool32)) > 0) {
+			atomic_set(&fast_pool->count, 0);
+>>>>>>> 80adfc1fa691 (random: defer fast pool mixing to worker)
 			fast_pool->last = now;
 			if (spin_trylock(&input_pool.lock)) {
 				_mix_pool_bytes(&fast_pool->pool32, sizeof(fast_pool->pool32));
@@ -2789,9 +2842,10 @@ void add_interrupt_randomness(int irq, int irq_flags)
 		return;
 	}
 
-	if ((fast_pool->count < 64) && !time_after(now, fast_pool->last + HZ))
+	if (new_count & MIX_INFLIGHT)
 		return;
 
+<<<<<<< HEAD
 	r = &input_pool;
 	if (!spin_trylock(&r->lock))
 		return;
@@ -3354,6 +3408,15 @@ EXPORT_SYMBOL(get_random_bytes);
 =======
 	/* Award one bit for the contents of the fast pool. */
 	credit_entropy_bits(1);
+=======
+	if (new_count < 64 && !time_after(now, fast_pool->last + HZ))
+		return;
+
+	if (unlikely(!fast_pool->mix.func))
+		INIT_WORK(&fast_pool->mix, mix_interrupt_randomness);
+	atomic_or(MIX_INFLIGHT, &fast_pool->count);
+	queue_work_on(raw_smp_processor_id(), system_highpri_wq, &fast_pool->mix);
+>>>>>>> 80adfc1fa691 (random: defer fast pool mixing to worker)
 }
 EXPORT_SYMBOL_GPL(add_interrupt_randomness);
 
