@@ -813,12 +813,16 @@ static void process_random_ready_list(void)
 	spin_unlock_irqrestore(&random_ready_list_lock, flags);
 }
 
+<<<<<<< HEAD
 /*
  * Credit (or debit) the entropy store with n bits of entropy.
  * Use credit_entropy_bits_safe() if the value comes from userspace
  * or otherwise should be checked for extreme values.
  */
 static void credit_entropy_bits(struct entropy_store *r, int nbits)
+=======
+static void credit_entropy_bits(int nbits)
+>>>>>>> 6605171cd8cb (random: make credit_entropy_bits() always safe)
 {
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -839,9 +843,10 @@ static void credit_entropy_bits(struct entropy_store *r, int nbits)
 =======
 >>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 
-	if (!nbits)
+	if (nbits <= 0)
 		return;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 retry:
 	entropy_count = orig = ACCESS_ONCE(r->entropy_count);
@@ -952,6 +957,10 @@ retry:
 
 	if (crng_init < 2 && entropy_count >= POOL_MIN_FRACBITS)
 =======
+=======
+	nbits = min(nbits, POOL_BITS);
+
+>>>>>>> 6605171cd8cb (random: make credit_entropy_bits() always safe)
 	do {
 		orig = READ_ONCE(input_pool.entropy_count);
 		entropy_count = min(POOL_BITS, orig + nbits);
@@ -965,6 +974,7 @@ retry:
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 }
 
+<<<<<<< HEAD
 static int credit_entropy_bits_safe(struct entropy_store *r, int nbits)
 {
 	const int nbits_max = r->poolinfo->poolwords * 32;
@@ -983,6 +993,8 @@ static int credit_entropy_bits_safe(struct entropy_store *r, int nbits)
 	return 0;
 }
 
+=======
+>>>>>>> 6605171cd8cb (random: make credit_entropy_bits() always safe)
 /*********************************************************************
  *
  * CRNG using CHACHA20
@@ -2589,7 +2601,14 @@ static long random_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 			return -EPERM;
 		if (get_user(ent_count, p))
 			return -EFAULT;
+<<<<<<< HEAD
 		return credit_entropy_bits_safe(&input_pool, ent_count);
+=======
+		if (ent_count < 0)
+			return -EINVAL;
+		credit_entropy_bits(ent_count);
+		return 0;
+>>>>>>> 6605171cd8cb (random: make credit_entropy_bits() always safe)
 	case RNDADDENTROPY:
 		if (!capable(CAP_SYS_ADMIN))
 			return -EPERM;
@@ -2603,7 +2622,12 @@ static long random_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 				    size);
 		if (retval < 0)
 			return retval;
+<<<<<<< HEAD
 		return credit_entropy_bits_safe(&input_pool, ent_count);
+=======
+		credit_entropy_bits(ent_count);
+		return 0;
+>>>>>>> 6605171cd8cb (random: make credit_entropy_bits() always safe)
 	case RNDZAPENTCNT:
 	case RNDCLEARPOOL:
 		/*
