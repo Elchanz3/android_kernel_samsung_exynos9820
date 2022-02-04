@@ -654,9 +654,13 @@ static void extract_entropy(void *buf, size_t nbytes);
 >>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 static __u32 const twist_table[8] = {
 =======
 static void crng_reseed(struct crng_state *crng, bool use_input_pool);
+=======
+static void crng_reseed(struct crng_state *crng);
+>>>>>>> 8c39bfd9db3c (random: remove use_input_pool parameter from crng_reseed())
 
 <<<<<<< HEAD
 static const u32 twist_table[8] = {
@@ -969,9 +973,13 @@ retry:
 	trace_credit_entropy_bits(nbits, entropy_count, _RET_IP_);
 
 	if (crng_init < 2 && entropy_count >= POOL_MIN_BITS)
+<<<<<<< HEAD
 >>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 		crng_reseed(&primary_crng, true);
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
+=======
+		crng_reseed(&primary_crng);
+>>>>>>> 8c39bfd9db3c (random: remove use_input_pool parameter from crng_reseed())
 }
 
 <<<<<<< HEAD
@@ -1260,7 +1268,11 @@ static int crng_slow_load(const char *cp, size_t len)
 	return 1;
 }
 
+<<<<<<< HEAD
 static void crng_reseed(struct crng_state *crng, struct entropy_store *r)
+=======
+static void crng_reseed(struct crng_state *crng)
+>>>>>>> 8c39bfd9db3c (random: remove use_input_pool parameter from crng_reseed())
 {
 	unsigned long flags;
 	int i;
@@ -1275,6 +1287,7 @@ static void crng_reseed(struct crng_state *crng, struct entropy_store *r)
 	} buf;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	if (r) {
 		num = extract_entropy(r, &buf, 32, 16, 0);
 		if (num == 0)
@@ -1285,6 +1298,9 @@ static void crng_reseed(struct crng_state *crng, struct entropy_store *r)
 >>>>>>> ccf535b5077a (random: use computational hash for entropy extraction)
 			return;
 =======
+=======
+	if (crng == &primary_crng) {
+>>>>>>> 8c39bfd9db3c (random: remove use_input_pool parameter from crng_reseed())
 		int entropy_count;
 		do {
 			entropy_count = READ_ONCE(input_pool.entropy_count);
@@ -1358,8 +1374,12 @@ static void _extract_crng(struct crng_state *crng, u8 out[CHACHA20_BLOCK_SIZE])
 		init_time = READ_ONCE(crng->init_time);
 		if (time_after(READ_ONCE(crng_global_init_time), init_time) ||
 		    time_after(jiffies, init_time + CRNG_RESEED_INTERVAL))
+<<<<<<< HEAD
 			crng_reseed(crng, crng == &primary_crng ?
 				    &input_pool : NULL);
+=======
+			crng_reseed(crng);
+>>>>>>> 8c39bfd9db3c (random: remove use_input_pool parameter from crng_reseed())
 	}
 	spin_lock_irqsave(&crng->lock, flags);
 	if (arch_get_random_long(&v))
@@ -2651,7 +2671,11 @@ static long random_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 			return -EPERM;
 		if (crng_init < 2)
 			return -ENODATA;
+<<<<<<< HEAD
 		crng_reseed(&primary_crng, &input_pool);
+=======
+		crng_reseed(&primary_crng);
+>>>>>>> 8c39bfd9db3c (random: remove use_input_pool parameter from crng_reseed())
 		WRITE_ONCE(crng_global_init_time, jiffies - 1);
 		return 0;
 	default:
