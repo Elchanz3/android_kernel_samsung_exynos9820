@@ -2791,6 +2791,7 @@ static ssize_t urandom_read_nowarn(struct file *file, char __user *buf,
 				   size_t nbytes, loff_t *ppos)
 >>>>>>> 166f9970b82a (random: access input_pool_data directly rather than through pointer)
 {
+<<<<<<< HEAD
 	ssize_t n;
 
 <<<<<<< HEAD
@@ -2805,6 +2806,10 @@ static ssize_t urandom_read_nowarn(struct file *file, char __user *buf,
 >>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 	ret = extract_crng_user(buf, nbytes);
 =======
+=======
+	ssize_t ret;
+
+>>>>>>> 21682884c699 (random: remove outdated INT_MAX >> 6 check in urandom_read())
 	ret = get_random_bytes_user(buf, nbytes);
 <<<<<<< HEAD
 >>>>>>> 5a595c18329e (random: absorb fast pool into input pool after fast load)
