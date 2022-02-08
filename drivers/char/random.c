@@ -548,6 +548,7 @@ struct crng_state primary_crng = {
 static int crng_init = 0;
 #define crng_ready() (likely(crng_init > 1))
 static int crng_init_cnt = 0;
+<<<<<<< HEAD
 static unsigned long crng_global_init_time = 0;
 <<<<<<< HEAD
 #define CRNG_INIT_CNT_THRESH (2*CHACHA20_KEY_SIZE)
@@ -559,6 +560,11 @@ static void _extract_crng(struct crng_state *crng, u8 out[CHACHA20_BLOCK_SIZE]);
 >>>>>>> 166f9970b82a (random: access input_pool_data directly rather than through pointer)
 static void _crng_backtrack_protect(struct crng_state *crng,
 				    __u8 tmp[CHACHA20_BLOCK_SIZE], int used);
+=======
+#define CRNG_INIT_CNT_THRESH (2 * CHACHA20_KEY_SIZE)
+static void extract_crng(u8 out[CHACHA20_BLOCK_SIZE]);
+static void crng_backtrack_protect(u8 tmp[CHACHA20_BLOCK_SIZE], int used);
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 static void process_random_ready_list(void);
 static void _get_random_bytes(void *buf, int nbytes);
 
@@ -655,12 +661,16 @@ static void extract_entropy(void *buf, size_t nbytes);
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 static __u32 const twist_table[8] = {
 =======
 static void crng_reseed(struct crng_state *crng, bool use_input_pool);
 =======
 static void crng_reseed(struct crng_state *crng);
 >>>>>>> 8c39bfd9db3c (random: remove use_input_pool parameter from crng_reseed())
+=======
+static void crng_reseed(void);
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 
 <<<<<<< HEAD
 static const u32 twist_table[8] = {
@@ -974,12 +984,16 @@ retry:
 
 	if (crng_init < 2 && entropy_count >= POOL_MIN_BITS)
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 		crng_reseed(&primary_crng, true);
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 =======
 		crng_reseed(&primary_crng);
 >>>>>>> 8c39bfd9db3c (random: remove use_input_pool parameter from crng_reseed())
+=======
+		crng_reseed();
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 }
 
 <<<<<<< HEAD
@@ -1013,6 +1027,7 @@ static int credit_entropy_bits_safe(struct entropy_store *r, int nbits)
 
 static DECLARE_WAIT_QUEUE_HEAD(crng_init_wait);
 
+<<<<<<< HEAD
 #ifdef CONFIG_NUMA
 /*
  * Hack to deal with crazy userspace progams when they are all trying
@@ -1053,6 +1068,16 @@ static void crng_initialize(struct crng_state *crng)
 
 	return arch_init;
 }
+=======
+static void invalidate_batched_entropy(void);
+
+static bool trust_cpu __ro_after_init = IS_ENABLED(CONFIG_RANDOM_TRUST_CPU);
+static int __init parse_trust_cpu(char *arg)
+{
+	return kstrtobool(arg, &trust_cpu);
+}
+early_param("random.trust_cpu", parse_trust_cpu);
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 
 static bool __init crng_init_try_arch_early(void)
 {
@@ -1072,20 +1097,11 @@ static bool __init crng_init_try_arch_early(void)
 	return arch_init;
 }
 
-static void crng_initialize_secondary(struct crng_state *crng)
-{
-	chacha_init_consts(crng->state);
-	_get_random_bytes(&crng->state[4], sizeof(u32) * 12);
-	crng_init_try_arch(crng);
-	crng->init_time = jiffies - CRNG_RESEED_INTERVAL - 1;
-}
-
-static void __init crng_initialize_primary(void)
+static void __init crng_initialize(void)
 {
 	extract_entropy(&primary_crng.state[4], sizeof(u32) * 12);
 	if (crng_init_try_arch_early() && trust_cpu && crng_init < 2) {
 		invalidate_batched_entropy();
-		numa_crng_init();
 		crng_init = 2;
 		pr_notice("crng init done (trusting CPU's manufacturer)\n");
 	}
@@ -1097,6 +1113,7 @@ static void __init crng_initialize_primary(void)
 >>>>>>> 7beef135045b (random: access primary_pool directly rather than through pointer)
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 #ifdef CONFIG_NUMA
 =======
@@ -1180,6 +1197,8 @@ static struct crng_state *select_crng(void)
 }
 #endif
 
+=======
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 /*
  * crng_fast_load() can be called by code in the interrupt service
  * path.  So we can't afford to dilly-dally.
@@ -1276,13 +1295,17 @@ static int crng_slow_load(const char *cp, size_t len)
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 static void crng_reseed(struct crng_state *crng, struct entropy_store *r)
 =======
 static void crng_reseed(struct crng_state *crng)
 >>>>>>> 8c39bfd9db3c (random: remove use_input_pool parameter from crng_reseed())
+=======
+static void crng_reseed(void)
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 {
 	unsigned long flags;
-	int i;
+	int i, entropy_count;
 	union {
 <<<<<<< HEAD
 		__u8	block[CHACHA20_BLOCK_SIZE];
@@ -1293,6 +1316,7 @@ static void crng_reseed(struct crng_state *crng)
 >>>>>>> 166f9970b82a (random: access input_pool_data directly rather than through pointer)
 	} buf;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 	if (r) {
@@ -1352,10 +1376,37 @@ static void crng_reseed(struct crng_state *crng)
 		if (unseeded_warning.missed) {
 			pr_notice("random: %d get_random_xx warning(s) missed "
 				  "due to ratelimiting\n",
+=======
+	do {
+		entropy_count = READ_ONCE(input_pool.entropy_count);
+		if (entropy_count < POOL_MIN_BITS)
+			return;
+	} while (cmpxchg(&input_pool.entropy_count, entropy_count, 0) != entropy_count);
+	extract_entropy(buf.key, sizeof(buf.key));
+	wake_up_interruptible(&random_write_wait);
+	kill_fasync(&fasync, SIGIO, POLL_OUT);
+
+	spin_lock_irqsave(&primary_crng.lock, flags);
+	for (i = 0; i < 8; i++)
+		primary_crng.state[i + 4] ^= buf.key[i];
+	memzero_explicit(&buf, sizeof(buf));
+	WRITE_ONCE(primary_crng.init_time, jiffies);
+	spin_unlock_irqrestore(&primary_crng.lock, flags);
+	if (crng_init < 2) {
+		invalidate_batched_entropy();
+		crng_init = 2;
+		process_random_ready_list();
+		wake_up_interruptible(&crng_init_wait);
+		kill_fasync(&fasync, SIGIO, POLL_IN);
+		pr_notice("crng init done\n");
+		if (unseeded_warning.missed) {
+			pr_notice("%d get_random_xx warning(s) missed due to ratelimiting\n",
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 				  unseeded_warning.missed);
 			unseeded_warning.missed = 0;
 		}
 		if (urandom_warning.missed) {
+<<<<<<< HEAD
 			pr_notice("random: %d urandom warning(s) missed "
 				  "due to ratelimiting\n",
 				  urandom_warning.missed);
@@ -1395,19 +1446,41 @@ static void _extract_crng(struct crng_state *crng, u8 out[CHACHA20_BLOCK_SIZE])
 	if (crng->state[12] == 0)
 		crng->state[13]++;
 	spin_unlock_irqrestore(&crng->lock, flags);
+=======
+			pr_notice("%d urandom warning(s) missed due to ratelimiting\n",
+				  urandom_warning.missed);
+			urandom_warning.missed = 0;
+		}
+	}
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 }
 
 static void extract_crng(__u8 out[CHACHA20_BLOCK_SIZE])
 {
-	_extract_crng(select_crng(), out);
+	unsigned long flags, init_time;
+
+	if (crng_ready()) {
+		init_time = READ_ONCE(primary_crng.init_time);
+		if (time_after(jiffies, init_time + CRNG_RESEED_INTERVAL))
+			crng_reseed();
+	}
+	spin_lock_irqsave(&primary_crng.lock, flags);
+	chacha20_block(&primary_crng.state[0], out);
+	if (primary_crng.state[12] == 0)
+		primary_crng.state[13]++;
+	spin_unlock_irqrestore(&primary_crng.lock, flags);
 }
 
 /*
  * Use the leftover bytes from the CRNG block output (if there is
  * enough) to mutate the CRNG key to provide backtracking protection.
  */
+<<<<<<< HEAD
 static void _crng_backtrack_protect(struct crng_state *crng,
 				    __u8 tmp[CHACHA20_BLOCK_SIZE], int used)
+=======
+static void crng_backtrack_protect(u8 tmp[CHACHA20_BLOCK_SIZE], int used)
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 {
 <<<<<<< HEAD
 	unsigned long	flags;
@@ -1424,6 +1497,7 @@ static void _crng_backtrack_protect(struct crng_state *crng,
 		extract_crng(tmp);
 		used = 0;
 	}
+<<<<<<< HEAD
 	spin_lock_irqsave(&crng->lock, flags);
 <<<<<<< HEAD
 	s = (__u32 *) &tmp[used];
@@ -1439,6 +1513,14 @@ static void _crng_backtrack_protect(struct crng_state *crng,
 static void crng_backtrack_protect(__u8 tmp[CHACHA20_BLOCK_SIZE], int used)
 {
 	_crng_backtrack_protect(select_crng(), tmp, used);
+=======
+	spin_lock_irqsave(&primary_crng.lock, flags);
+	s = (u32 *)&tmp[used];
+	d = &primary_crng.state[4];
+	for (i = 0; i < 8; i++)
+		*d++ ^= *s++;
+	spin_unlock_irqrestore(&primary_crng.lock, flags);
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 }
 
 static ssize_t extract_crng_user(void __user *buf, size_t nbytes)
@@ -1902,7 +1984,7 @@ static void extract_entropy(void *buf, size_t nbytes)
 	unsigned long flags;
 	u8 seed[BLAKE2S_HASH_SIZE], next_key[BLAKE2S_HASH_SIZE];
 	struct {
-		unsigned long rdrand[32 / sizeof(long)];
+		unsigned long rdseed[32 / sizeof(long)];
 		size_t counter;
 	} block;
 	size_t i;
@@ -1922,6 +2004,7 @@ static void extract_entropy(void *buf, size_t nbytes)
 		hash.l[i] = v;
 	}
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 	/* Generate a hash across the pool, 16 words (512 bits) at a time */
 	spin_lock_irqsave(&r->lock, flags);
@@ -1991,6 +2074,12 @@ static ssize_t _extract_entropy(struct entropy_store *r, void *buf,
 	for (i = 0; i < ARRAY_SIZE(block.rdrand); ++i) {
 		if (!arch_get_random_long(&block.rdrand[i]))
 			block.rdrand[i] = random_get_entropy();
+=======
+	for (i = 0; i < ARRAY_SIZE(block.rdseed); ++i) {
+		if (!arch_get_random_seed_long(&block.rdseed[i]) &&
+		    !arch_get_random_long(&block.rdseed[i]))
+			block.rdseed[i] = random_get_entropy();
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 	}
 
 	spin_lock_irqsave(&input_pool.lock, flags);
@@ -1998,7 +2087,7 @@ static ssize_t _extract_entropy(struct entropy_store *r, void *buf,
 	/* seed = HASHPRF(last_key, entropy_input) */
 	blake2s_final(&input_pool.hash, seed);
 
-	/* next_key = HASHPRF(seed, RDRAND || 0) */
+	/* next_key = HASHPRF(seed, RDSEED || 0) */
 	block.counter = 0;
 	blake2s(next_key, (u8 *)&block, seed, sizeof(next_key), sizeof(block), sizeof(seed));
 	blake2s_init_key(&input_pool.hash, BLAKE2S_HASH_SIZE, next_key, sizeof(next_key));
@@ -2008,7 +2097,7 @@ static ssize_t _extract_entropy(struct entropy_store *r, void *buf,
 
 	while (nbytes) {
 		i = min_t(size_t, nbytes, BLAKE2S_HASH_SIZE);
-		/* output = HASHPRF(seed, RDRAND || ++counter) */
+		/* output = HASHPRF(seed, RDSEED || ++counter) */
 		++block.counter;
 		blake2s(buf, (u8 *)&block, seed, i, sizeof(block), sizeof(seed));
 >>>>>>> ccf535b5077a (random: use computational hash for entropy extraction)
@@ -2416,11 +2505,15 @@ static int rand_initialize(void)
 	crng_initialize(&primary_crng);
 =======
 	init_std_data();
+<<<<<<< HEAD
 	if (crng_need_final_init)
 		crng_finalize_init();
 	crng_initialize_primary();
 >>>>>>> 7beef135045b (random: access primary_pool directly rather than through pointer)
 	crng_global_init_time = jiffies;
+=======
+	crng_initialize();
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 	if (ratelimit_disable) {
 		urandom_warning.interval = 0;
 		unseeded_warning.interval = 0;
@@ -2679,11 +2772,15 @@ static long random_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		if (crng_init < 2)
 			return -ENODATA;
 <<<<<<< HEAD
+<<<<<<< HEAD
 		crng_reseed(&primary_crng, &input_pool);
 =======
 		crng_reseed(&primary_crng);
 >>>>>>> 8c39bfd9db3c (random: remove use_input_pool parameter from crng_reseed())
 		WRITE_ONCE(crng_global_init_time, jiffies - 1);
+=======
+		crng_reseed();
+>>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 		return 0;
 	default:
 		return -EINVAL;
