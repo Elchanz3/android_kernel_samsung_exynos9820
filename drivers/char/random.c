@@ -132,7 +132,7 @@
  *
  * The primary kernel interfaces are:
  *
- *	void get_random_bytes(void *buf, int nbytes);
+ *	void get_random_bytes(void *buf, size_t nbytes);
  *	u32 get_random_u32()
  *	u64 get_random_u64()
  *	unsigned int get_random_int()
@@ -161,7 +161,7 @@
  * The current exported interfaces for gathering environmental noise
  * from the devices are:
  *
- *	void add_device_randomness(const void *buf, unsigned int size);
+ *	void add_device_randomness(const void *buf, size_t size);
  *	void add_input_randomness(unsigned int type, unsigned int code,
  *                                unsigned int value);
 <<<<<<< HEAD
@@ -170,10 +170,14 @@
 =======
  *	void add_interrupt_randomness(int irq);
  *	void add_disk_randomness(struct gendisk *disk);
- *	void add_hwgenerator_randomness(const char *buffer, size_t count,
+ *	void add_hwgenerator_randomness(const void *buffer, size_t count,
  *					size_t entropy);
+<<<<<<< HEAD
  *	void add_bootloader_randomness(const void *buf, unsigned int size);
 >>>>>>> 166f9970b82a (random: access input_pool_data directly rather than through pointer)
+=======
+ *	void add_bootloader_randomness(const void *buf, size_t size);
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
  *
  * add_device_randomness() is for adding data to the random pool that
  * is likely to differ between two devices (or possibly even per boot).
@@ -528,7 +532,7 @@ static void crng_backtrack_protect(u8 tmp[CHACHA20_BLOCK_SIZE], int used);
 =======
 >>>>>>> 5a595c18329e (random: absorb fast pool into input pool after fast load)
 static void process_random_ready_list(void);
-static void _get_random_bytes(void *buf, int nbytes);
+static void _get_random_bytes(void *buf, size_t nbytes);
 
 static struct ratelimit_state unseeded_warning =
 	RATELIMIT_STATE_INIT("warn_unseeded_randomness", HZ, 3);
@@ -604,7 +608,7 @@ static struct entropy_store blocking_pool = {
 static struct {
 	struct blake2s_state hash;
 	spinlock_t lock;
-	int entropy_count;
+	unsigned int entropy_count;
 } input_pool = {
 	.hash.h = { BLAKE2S_IV0 ^ (0x01010000 | BLAKE2S_HASH_SIZE),
 		    BLAKE2S_IV1, BLAKE2S_IV2, BLAKE2S_IV3, BLAKE2S_IV4,
@@ -647,8 +651,12 @@ static const u32 twist_table[8] = {
  * update the entropy estimate.  The caller should call
  * credit_entropy_bits if this is appropriate.
  */
+<<<<<<< HEAD
 static void _mix_pool_bytes(struct entropy_store *r, const void *in,
 			    int nbytes)
+=======
+static void _mix_pool_bytes(const void *in, size_t nbytes)
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 {
 <<<<<<< HEAD
 	unsigned long i, tap1, tap2, tap3, tap4, tap5;
@@ -710,6 +718,7 @@ static void _mix_pool_bytes(struct entropy_store *r, const void *in,
 >>>>>>> ccf535b5077a (random: use computational hash for entropy extraction)
 }
 
+<<<<<<< HEAD
 static void __mix_pool_bytes(struct entropy_store *r, const void *in,
 			     int nbytes)
 {
@@ -719,6 +728,9 @@ static void __mix_pool_bytes(struct entropy_store *r, const void *in,
 
 static void mix_pool_bytes(struct entropy_store *r, const void *in,
 			   int nbytes)
+=======
+static void mix_pool_bytes(const void *in, size_t nbytes)
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 {
 	unsigned long flags;
 
@@ -790,6 +802,7 @@ static void process_random_ready_list(void)
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 /*
  * Credit (or debit) the entropy store with n bits of entropy.
  * Use credit_entropy_bits_safe() if the value comes from userspace
@@ -818,10 +831,16 @@ static void credit_entropy_bits(int nbits)
 	BUILD_BUG_ON(2 * (POOL_ENTROPY_SHIFT + POOL_BITSHIFT) > 31);
 =======
 >>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
+=======
+static void credit_entropy_bits(size_t nbits)
+{
+	unsigned int entropy_count, orig, add;
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
-	if (nbits <= 0)
+	if (!nbits)
 		return;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 retry:
@@ -935,11 +954,14 @@ retry:
 =======
 =======
 	nbits = min(nbits, POOL_BITS);
+=======
+	add = min_t(size_t, nbits, POOL_BITS);
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
 >>>>>>> 6605171cd8cb (random: make credit_entropy_bits() always safe)
 	do {
 		orig = READ_ONCE(input_pool.entropy_count);
-		entropy_count = min(POOL_BITS, orig + nbits);
+		entropy_count = min_t(unsigned int, POOL_BITS, orig + add);
 	} while (cmpxchg(&input_pool.entropy_count, orig, entropy_count) != orig);
 
 	trace_credit_entropy_bits(nbits, entropy_count, _RET_IP_);
@@ -1189,10 +1211,18 @@ static struct crng_state *select_crng(void)
  * crng_fast_load() can be called by code in the interrupt service
  * path.  So we can't afford to dilly-dally.
  */
+<<<<<<< HEAD
 static int crng_fast_load(const char *cp, size_t len)
 {
 	unsigned long flags;
 	char *p;
+=======
+static size_t crng_fast_load(const void *cp, size_t len)
+{
+	unsigned long flags;
+	const u8 *src = (const u8 *)cp;
+	size_t ret = 0;
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
 	if (!spin_trylock_irqsave(&base_crng.lock, flags))
 		return 0;
@@ -1200,6 +1230,7 @@ static int crng_fast_load(const char *cp, size_t len)
 		spin_unlock_irqrestore(&base_crng.lock, flags);
 		return 0;
 	}
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 	p = (unsigned char *) &primary_crng.state[4];
@@ -1215,6 +1246,11 @@ static int crng_fast_load(const char *cp, size_t len)
 		p[crng_init_cnt % sizeof(base_crng.key)] ^= *cp;
 		cp++; crng_init_cnt++; len--; ret++;
 >>>>>>> 5a595c18329e (random: absorb fast pool into input pool after fast load)
+=======
+	while (len > 0 && crng_init_cnt < CRNG_INIT_CNT_THRESH) {
+		base_crng.key[crng_init_cnt % sizeof(base_crng.key)] ^= *src;
+		src++; crng_init_cnt++; len--; ret++;
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 	}
 	if (crng_init_cnt >= CRNG_INIT_CNT_THRESH) {
 		invalidate_batched_entropy();
@@ -1240,14 +1276,16 @@ static int crng_fast_load(const char *cp, size_t len)
  * all), and (2) it doesn't have the performance constraints of
  * crng_fast_load().
  *
- * So we do something more comprehensive which is guaranteed to touch
- * all of the primary_crng's state, and which uses a LFSR with a
- * period of 255 as part of the mixing algorithm.  Finally, we do
- * *not* advance crng_init_cnt since buffer we may get may be something
- * like a fixed DMI table (for example), which might very well be
- * unique to the machine, but is otherwise unvarying.
+ * So, we simply hash the contents in with the current key. Finally,
+ * we do *not* advance crng_init_cnt since buffer we may get may be
+ * something like a fixed DMI table (for example), which might very
+ * well be unique to the machine, but is otherwise unvarying.
  */
+<<<<<<< HEAD
 static int crng_slow_load(const char *cp, size_t len)
+=======
+static void crng_slow_load(const void *cp, size_t len)
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 {
 <<<<<<< HEAD
 	unsigned long		flags;
@@ -1258,6 +1296,7 @@ static int crng_slow_load(const char *cp, size_t len)
 	char *			dest_buf = (char *) &primary_crng.state[4];
 =======
 	unsigned long flags;
+<<<<<<< HEAD
 	static u8 lfsr = 1;
 	u8 tmp;
 	unsigned int i, max = sizeof(base_crng.key);
@@ -1268,27 +1307,24 @@ static int crng_slow_load(const char *cp, size_t len)
 =======
 	u8 *dest_buf = base_crng.key;
 >>>>>>> 5a595c18329e (random: absorb fast pool into input pool after fast load)
+=======
+	struct blake2s_state hash;
+
+	blake2s_init(&hash, sizeof(base_crng.key));
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
 	if (!spin_trylock_irqsave(&base_crng.lock, flags))
-		return 0;
+		return;
 	if (crng_init != 0) {
 		spin_unlock_irqrestore(&base_crng.lock, flags);
-		return 0;
+		return;
 	}
-	if (len > max)
-		max = len;
 
-	for (i = 0; i < max; i++) {
-		tmp = lfsr;
-		lfsr >>= 1;
-		if (tmp & 1)
-			lfsr ^= 0xE1;
-		tmp = dest_buf[i % sizeof(base_crng.key)];
-		dest_buf[i % sizeof(base_crng.key)] ^= src_buf[i % len] ^ lfsr;
-		lfsr += (tmp << 3) | (tmp >> 5);
-	}
+	blake2s_update(&hash, base_crng.key, sizeof(base_crng.key));
+	blake2s_update(&hash, cp, len);
+	blake2s_final(&hash, base_crng.key);
+
 	spin_unlock_irqrestore(&base_crng.lock, flags);
-	return 1;
 }
 
 <<<<<<< HEAD
@@ -1629,14 +1665,15 @@ static ssize_t get_random_bytes_user(void __user *buf, size_t nbytes)
 	int large_request = (nbytes > 256);
 =======
 	bool large_request = nbytes > 256;
-	ssize_t ret = 0, len;
+	ssize_t ret = 0;
+	size_t len;
 	u32 chacha_state[CHACHA20_BLOCK_SIZE / sizeof(u32)];
 	u8 output[CHACHA20_BLOCK_SIZE];
 
 	if (!nbytes)
 		return 0;
 
-	len = min_t(ssize_t, 32, nbytes);
+	len = min_t(size_t, 32, nbytes);
 	crng_make_state(chacha_state, output, len);
 
 	if (copy_to_user(buf, output, len))
@@ -1657,7 +1694,7 @@ static ssize_t get_random_bytes_user(void __user *buf, size_t nbytes)
 		if (unlikely(chacha_state[12] == 0))
 			++chacha_state[13];
 
-		len = min_t(ssize_t, nbytes, CHACHA20_BLOCK_SIZE);
+		len = min_t(size_t, nbytes, CHACHA20_BLOCK_SIZE);
 		if (copy_to_user(buf, output, len)) {
 			ret = -EFAULT;
 			break;
@@ -1696,7 +1733,7 @@ struct timer_rand_state {
  * the entropy pool having similar initial state across largely
  * identical devices.
  */
-void add_device_randomness(const void *buf, unsigned int size)
+void add_device_randomness(const void *buf, size_t size)
 {
 	unsigned long time = random_get_entropy() ^ jiffies;
 	unsigned long flags;
@@ -1724,7 +1761,7 @@ static struct timer_rand_state input_timer_state = INIT_TIMER_RAND_STATE;
  * keyboard scan codes, and 256 upwards for interrupts.
  *
  */
-static void add_timer_randomness(struct timer_rand_state *state, unsigned num)
+static void add_timer_randomness(struct timer_rand_state *state, unsigned int num)
 {
 	struct entropy_store	*r;
 	struct {
@@ -1784,8 +1821,12 @@ static void add_timer_randomness(struct timer_rand_state *state, unsigned num)
 	 * Round down by 1 bit on general principles,
 	 * and limit entropy estimate to 12 bits.
 	 */
+<<<<<<< HEAD
 	credit_entropy_bits(min_t(int, fls(delta >> 1), 11));
 >>>>>>> 166f9970b82a (random: access input_pool_data directly rather than through pointer)
+=======
+	credit_entropy_bits(min_t(unsigned int, fls(delta >> 1), 11));
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 }
 
 void add_input_randomness(unsigned int type, unsigned int code,
@@ -1890,9 +1931,14 @@ void add_interrupt_randomness(int irq, int irq_flags)
 	add_interrupt_bench(cycles);
 
 	if (unlikely(crng_init == 0)) {
+<<<<<<< HEAD
 		if ((fast_pool->count >= 64) &&
 		    crng_fast_load((char *) fast_pool->pool,
 				   sizeof(fast_pool->pool))) {
+=======
+		if (fast_pool->count >= 64 &&
+		    crng_fast_load(fast_pool->pool, sizeof(fast_pool->pool)) > 0) {
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 			fast_pool->count = 0;
 			fast_pool->last = now;
 			if (spin_trylock(&input_pool.lock)) {
@@ -1911,6 +1957,7 @@ void add_interrupt_randomness(int irq, int irq_flags)
 		return;
 
 	fast_pool->last = now;
+<<<<<<< HEAD
 	__mix_pool_bytes(r, &fast_pool->pool, sizeof(fast_pool->pool));
 
 	/*
@@ -1924,6 +1971,10 @@ void add_interrupt_randomness(int irq, int irq_flags)
 		credit = 1;
 	}
 	spin_unlock(&r->lock);
+=======
+	_mix_pool_bytes(&fast_pool->pool, sizeof(fast_pool->pool));
+	spin_unlock(&input_pool.lock);
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
 	fast_pool->count = 0;
 
@@ -2372,22 +2423,26 @@ static void _warn_unseeded_randomness(const char *func_name, void *caller, void 
  * wait_for_random_bytes() should be called and return 0 at least once
  * at any point prior.
  */
-static void _get_random_bytes(void *buf, int nbytes)
+static void _get_random_bytes(void *buf, size_t nbytes)
 {
 <<<<<<< HEAD
 	__u8 tmp[CHACHA20_BLOCK_SIZE];
 =======
 	u32 chacha_state[CHACHA20_BLOCK_SIZE / sizeof(u32)];
 	u8 tmp[CHACHA20_BLOCK_SIZE];
+<<<<<<< HEAD
 	ssize_t len;
 >>>>>>> 5a595c18329e (random: absorb fast pool into input pool after fast load)
+=======
+	size_t len;
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
 	trace_get_random_bytes(nbytes, _RET_IP_);
 
 	if (!nbytes)
 		return;
 
-	len = min_t(ssize_t, 32, nbytes);
+	len = min_t(size_t, 32, nbytes);
 	crng_make_state(chacha_state, buf, len);
 	nbytes -= len;
 	buf += len;
@@ -2410,7 +2465,7 @@ static void _get_random_bytes(void *buf, int nbytes)
 	memzero_explicit(chacha_state, sizeof(chacha_state));
 }
 
-void get_random_bytes(void *buf, int nbytes)
+void get_random_bytes(void *buf, size_t nbytes)
 {
 	static void *previous;
 
@@ -2561,6 +2616,7 @@ EXPORT_SYMBOL(del_random_ready_callback);
 
 /*
  * This function will use the architecture-specific hardware random
+<<<<<<< HEAD
  * number generator if it is available.  The arch-specific hw RNG will
  * almost certainly be faster than what we can do in software, but it
  * is impossible to verify that it is implemented securely (as
@@ -2572,11 +2628,25 @@ EXPORT_SYMBOL(del_random_ready_callback);
 void get_random_bytes_arch(void *buf, int nbytes)
 {
 	char *p = buf;
+=======
+ * number generator if it is available. It is not recommended for
+ * use. Use get_random_bytes() instead. It returns the number of
+ * bytes filled in.
+ */
+size_t __must_check get_random_bytes_arch(void *buf, size_t nbytes)
+{
+	size_t left = nbytes;
+	u8 *p = buf;
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
 	trace_get_random_bytes_arch(nbytes, _RET_IP_);
 	while (nbytes) {
 		unsigned long v;
+<<<<<<< HEAD
 		int chunk = min(nbytes, (int)sizeof(unsigned long));
+=======
+		size_t chunk = min_t(size_t, left, sizeof(unsigned long));
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
 		if (!arch_get_random_long(&v))
 			break;
@@ -2645,6 +2715,7 @@ static int rand_initialize(void)
 {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	init_std_data(&input_pool);
 	init_std_data(&blocking_pool);
 	crng_initialize(&primary_crng);
@@ -2661,11 +2732,14 @@ static int rand_initialize(void)
 >>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
 =======
 	int i;
+=======
+	size_t i;
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 	ktime_t now = ktime_get_real();
 	bool arch_init = true;
 	unsigned long rv;
 
-	for (i = BLAKE2S_BLOCK_SIZE; i > 0; i -= sizeof(rv)) {
+	for (i = 0; i < BLAKE2S_BLOCK_SIZE; i += sizeof(rv)) {
 		if (!arch_get_random_seed_long_early(&rv) &&
 		    !arch_get_random_long_early(&rv)) {
 			rv = random_get_entropy();
@@ -2732,8 +2806,12 @@ static ssize_t urandom_read_nowarn(struct file *file, char __user *buf,
 	ret = extract_crng_user(buf, nbytes);
 =======
 	ret = get_random_bytes_user(buf, nbytes);
+<<<<<<< HEAD
 >>>>>>> 5a595c18329e (random: absorb fast pool into input pool after fast load)
 	trace_urandom_read(8 * nbytes, 0, input_pool.entropy_count);
+=======
+	trace_urandom_read(nbytes, input_pool.entropy_count);
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 	return ret;
 }
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
@@ -2824,6 +2902,7 @@ static unsigned int random_poll(struct file *file, poll_table *wait)
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 static int
 write_pool(struct entropy_store *r, const char __user *buffer, size_t count)
 =======
@@ -2837,11 +2916,18 @@ static int write_pool(const char __user *buffer, size_t count)
 	u8 buf[BLAKE2S_BLOCK_SIZE];
 >>>>>>> 2d9c1b42a51c (random: do not xor RDRAND when writing into /dev/random)
 	const char __user *p = buffer;
+=======
+static int write_pool(const char __user *ubuf, size_t count)
+{
+	size_t len;
+	u8 block[BLAKE2S_BLOCK_SIZE];
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
-	while (count > 0) {
-		bytes = min(count, sizeof(buf));
-		if (copy_from_user(buf, p, bytes))
+	while (count) {
+		len = min(count, sizeof(block));
+		if (copy_from_user(block, ubuf, len))
 			return -EFAULT;
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 		for (b = bytes ; b > 0 ; b -= sizeof(__u32), i++) {
@@ -2859,6 +2945,11 @@ static int write_pool(const char __user *buffer, size_t count)
 		p += bytes;
 		mix_pool_bytes(buf, bytes);
 >>>>>>> 2d9c1b42a51c (random: do not xor RDRAND when writing into /dev/random)
+=======
+		count -= len;
+		ubuf += len;
+		mix_pool_bytes(block, len);
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 		cond_resched();
 	}
 
@@ -2868,7 +2959,7 @@ static int write_pool(const char __user *buffer, size_t count)
 static ssize_t random_write(struct file *file, const char __user *buffer,
 			    size_t count, loff_t *ppos)
 {
-	size_t ret;
+	int ret;
 
 	ret = write_pool(&input_pool, buffer, count);
 	if (ret)
@@ -2994,11 +3085,14 @@ const struct file_operations urandom_fops = {
 SYSCALL_DEFINE3(getrandom, char __user *, buf, size_t, count, unsigned int,
 		flags)
 {
+<<<<<<< HEAD
 	int ret;
 
 <<<<<<< HEAD
 	if (flags & ~(GRND_NONBLOCK|GRND_RANDOM))
 =======
+=======
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 	if (flags & ~(GRND_NONBLOCK | GRND_RANDOM | GRND_INSECURE))
 		return -EINVAL;
 
@@ -3013,10 +3107,16 @@ SYSCALL_DEFINE3(getrandom, char __user *, buf, size_t, count, unsigned int,
 	if (count > INT_MAX)
 		count = INT_MAX;
 
+<<<<<<< HEAD
 	if (flags & GRND_RANDOM)
 		return _random_read(flags & GRND_NONBLOCK, buf, count);
 
 	if (!crng_ready()) {
+=======
+	if (!(flags & GRND_INSECURE) && !crng_ready()) {
+		int ret;
+
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 		if (flags & GRND_NONBLOCK)
 			return -EAGAIN;
 		ret = wait_for_random_bytes();
@@ -3315,7 +3415,7 @@ unsigned long randomize_page(unsigned long start, unsigned long range)
  * Those devices may produce endless random bits and will be throttled
  * when our pool is full.
  */
-void add_hwgenerator_randomness(const char *buffer, size_t count,
+void add_hwgenerator_randomness(const void *buffer, size_t count,
 				size_t entropy)
 {
 	struct entropy_store *poolp = &input_pool;
@@ -3349,3 +3449,20 @@ void add_hwgenerator_randomness(const char *buffer, size_t count,
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 }
 EXPORT_SYMBOL_GPL(add_hwgenerator_randomness);
+<<<<<<< HEAD
+=======
+
+/* Handle random seed passed by bootloader.
+ * If the seed is trustworthy, it would be regarded as hardware RNGs. Otherwise
+ * it would be regarded as device data.
+ * The decision is controlled by CONFIG_RANDOM_TRUST_BOOTLOADER.
+ */
+void add_bootloader_randomness(const void *buf, size_t size)
+{
+	if (IS_ENABLED(CONFIG_RANDOM_TRUST_BOOTLOADER))
+		add_hwgenerator_randomness(buf, size, size * 8);
+	else
+		add_device_randomness(buf, size);
+}
+EXPORT_SYMBOL_GPL(add_bootloader_randomness);
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())

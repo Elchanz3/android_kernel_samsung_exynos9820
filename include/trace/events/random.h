@@ -9,13 +9,13 @@
 #include <linux/tracepoint.h>
 
 TRACE_EVENT(add_device_randomness,
-	TP_PROTO(int bytes, unsigned long IP),
+	TP_PROTO(size_t bytes, unsigned long IP),
 
 	TP_ARGS(bytes, IP),
 
 	TP_STRUCT__entry(
-		__field(	  int,	bytes			)
-		__field(unsigned long,	IP			)
+		__field(size_t,		bytes	)
+		__field(unsigned long,	IP	)
 	),
 
 	TP_fast_assign(
@@ -23,19 +23,28 @@ TRACE_EVENT(add_device_randomness,
 		__entry->IP		= IP;
 	),
 
-	TP_printk("bytes %d caller %pS",
+	TP_printk("bytes %zu caller %pS",
 		__entry->bytes, (void *)__entry->IP)
 );
 
 DECLARE_EVENT_CLASS(random__mix_pool_bytes,
+<<<<<<< HEAD
 	TP_PROTO(const char *pool_name, int bytes, unsigned long IP),
+=======
+	TP_PROTO(size_t bytes, unsigned long IP),
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
 	TP_ARGS(pool_name, bytes, IP),
 
 	TP_STRUCT__entry(
+<<<<<<< HEAD
 		__field( const char *,	pool_name		)
 		__field(	  int,	bytes			)
 		__field(unsigned long,	IP			)
+=======
+		__field(size_t,		bytes	)
+		__field(unsigned long,	IP	)
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 	),
 
 	TP_fast_assign(
@@ -44,12 +53,21 @@ DECLARE_EVENT_CLASS(random__mix_pool_bytes,
 		__entry->IP		= IP;
 	),
 
+<<<<<<< HEAD
 	TP_printk("%s pool: bytes %d caller %pS",
 		  __entry->pool_name, __entry->bytes, (void *)__entry->IP)
 );
 
 DEFINE_EVENT(random__mix_pool_bytes, mix_pool_bytes,
 	TP_PROTO(const char *pool_name, int bytes, unsigned long IP),
+=======
+	TP_printk("input pool: bytes %zu caller %pS",
+		  __entry->bytes, (void *)__entry->IP)
+);
+
+DEFINE_EVENT(random__mix_pool_bytes, mix_pool_bytes,
+	TP_PROTO(size_t bytes, unsigned long IP),
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
 	TP_ARGS(pool_name, bytes, IP)
 );
@@ -61,16 +79,25 @@ DEFINE_EVENT(random__mix_pool_bytes, mix_pool_bytes_nolock,
 );
 
 TRACE_EVENT(credit_entropy_bits,
+<<<<<<< HEAD
 	TP_PROTO(const char *pool_name, int bits, int entropy_count,
 		 int entropy_total, unsigned long IP),
+=======
+	TP_PROTO(size_t bits, size_t entropy_count, unsigned long IP),
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
 	TP_ARGS(pool_name, bits, entropy_count, entropy_total, IP),
 
 	TP_STRUCT__entry(
+<<<<<<< HEAD
 		__field( const char *,	pool_name		)
 		__field(	  int,	bits			)
 		__field(	  int,	entropy_count		)
 		__field(	  int,	entropy_total		)
+=======
+		__field(size_t,		bits			)
+		__field(size_t,		entropy_count		)
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 		__field(unsigned long,	IP			)
 	),
 
@@ -82,10 +109,15 @@ TRACE_EVENT(credit_entropy_bits,
 		__entry->IP		= IP;
 	),
 
+<<<<<<< HEAD
 	TP_printk("%s pool: bits %d entropy_count %d entropy_total %d "
 		  "caller %pS", __entry->pool_name, __entry->bits,
 		  __entry->entropy_count, __entry->entropy_total,
 		  (void *)__entry->IP)
+=======
+	TP_printk("input pool: bits %zu entropy_count %zu caller %pS",
+		  __entry->bits, __entry->entropy_count, (void *)__entry->IP)
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 );
 
 TRACE_EVENT(push_to_pool,
@@ -133,29 +165,29 @@ TRACE_EVENT(debit_entropy,
 =======
 >>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 TRACE_EVENT(add_input_randomness,
-	TP_PROTO(int input_bits),
+	TP_PROTO(size_t input_bits),
 
 	TP_ARGS(input_bits),
 
 	TP_STRUCT__entry(
-		__field(	  int,	input_bits		)
+		__field(size_t,	input_bits		)
 	),
 
 	TP_fast_assign(
 		__entry->input_bits	= input_bits;
 	),
 
-	TP_printk("input_pool_bits %d", __entry->input_bits)
+	TP_printk("input_pool_bits %zu", __entry->input_bits)
 );
 
 TRACE_EVENT(add_disk_randomness,
-	TP_PROTO(dev_t dev, int input_bits),
+	TP_PROTO(dev_t dev, size_t input_bits),
 
 	TP_ARGS(dev, input_bits),
 
 	TP_STRUCT__entry(
-		__field(	dev_t,	dev			)
-		__field(	  int,	input_bits		)
+		__field(dev_t,		dev			)
+		__field(size_t,		input_bits		)
 	),
 
 	TP_fast_assign(
@@ -163,7 +195,7 @@ TRACE_EVENT(add_disk_randomness,
 		__entry->input_bits	= input_bits;
 	),
 
-	TP_printk("dev %d,%d input_pool_bits %d", MAJOR(__entry->dev),
+	TP_printk("dev %d,%d input_pool_bits %zu", MAJOR(__entry->dev),
 		  MINOR(__entry->dev), __entry->input_bits)
 );
 
@@ -197,12 +229,12 @@ TRACE_EVENT(xfer_secondary_pool,
 );
 
 DECLARE_EVENT_CLASS(random__get_random_bytes,
-	TP_PROTO(int nbytes, unsigned long IP),
+	TP_PROTO(size_t nbytes, unsigned long IP),
 
 	TP_ARGS(nbytes, IP),
 
 	TP_STRUCT__entry(
-		__field(	  int,	nbytes			)
+		__field(size_t,		nbytes			)
 		__field(unsigned long,	IP			)
 	),
 
@@ -211,22 +243,23 @@ DECLARE_EVENT_CLASS(random__get_random_bytes,
 		__entry->IP		= IP;
 	),
 
-	TP_printk("nbytes %d caller %pS", __entry->nbytes, (void *)__entry->IP)
+	TP_printk("nbytes %zu caller %pS", __entry->nbytes, (void *)__entry->IP)
 );
 
 DEFINE_EVENT(random__get_random_bytes, get_random_bytes,
-	TP_PROTO(int nbytes, unsigned long IP),
+	TP_PROTO(size_t nbytes, unsigned long IP),
 
 	TP_ARGS(nbytes, IP)
 );
 
 DEFINE_EVENT(random__get_random_bytes, get_random_bytes_arch,
-	TP_PROTO(int nbytes, unsigned long IP),
+	TP_PROTO(size_t nbytes, unsigned long IP),
 
 	TP_ARGS(nbytes, IP)
 );
 
 DECLARE_EVENT_CLASS(random__extract_entropy,
+<<<<<<< HEAD
 <<<<<<< HEAD
 	TP_PROTO(const char *pool_name, int nbytes, int entropy_count,
 		 unsigned long IP),
@@ -234,14 +267,22 @@ DECLARE_EVENT_CLASS(random__extract_entropy,
 	TP_ARGS(pool_name, nbytes, entropy_count, IP),
 =======
 	TP_PROTO(int nbytes, int entropy_count),
+=======
+	TP_PROTO(size_t nbytes, size_t entropy_count),
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
 	TP_ARGS(nbytes, entropy_count),
 >>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 
 	TP_STRUCT__entry(
+<<<<<<< HEAD
 		__field( const char *,	pool_name		)
 		__field(	  int,	nbytes			)
 		__field(	  int,	entropy_count		)
+=======
+		__field(  size_t,	nbytes			)
+		__field(  size_t,	entropy_count		)
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 	),
 
 	TP_fast_assign(
@@ -251,17 +292,22 @@ DECLARE_EVENT_CLASS(random__extract_entropy,
 	),
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	TP_printk("%s pool: nbytes %d entropy_count %d caller %pS",
 		  __entry->pool_name, __entry->nbytes, __entry->entropy_count,
 		  (void *)__entry->IP)
 =======
 	TP_printk("input pool: nbytes %d entropy_count %d",
+=======
+	TP_printk("input pool: nbytes %zu entropy_count %zu",
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 		  __entry->nbytes, __entry->entropy_count)
 >>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 );
 
 
 DEFINE_EVENT(random__extract_entropy, extract_entropy,
+<<<<<<< HEAD
 <<<<<<< HEAD
 	TP_PROTO(const char *pool_name, int nbytes, int entropy_count,
 		 unsigned long IP),
@@ -301,31 +347,31 @@ TRACE_EVENT(random_read,
 		  __entry->input_left)
 =======
 	TP_PROTO(int nbytes, int entropy_count),
+=======
+	TP_PROTO(size_t nbytes, size_t entropy_count),
+>>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
 	TP_ARGS(nbytes, entropy_count)
 >>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 );
 
 TRACE_EVENT(urandom_read,
-	TP_PROTO(int got_bits, int pool_left, int input_left),
+	TP_PROTO(size_t nbytes, size_t entropy_count),
 
-	TP_ARGS(got_bits, pool_left, input_left),
+	TP_ARGS(nbytes, entropy_count),
 
 	TP_STRUCT__entry(
-		__field(	  int,	got_bits		)
-		__field(	  int,	pool_left		)
-		__field(	  int,	input_left		)
+		__field( size_t,	nbytes		)
+		__field( size_t,	entropy_count	)
 	),
 
 	TP_fast_assign(
-		__entry->got_bits	= got_bits;
-		__entry->pool_left	= pool_left;
-		__entry->input_left	= input_left;
+		__entry->nbytes		= nbytes;
+		__entry->entropy_count	= entropy_count;
 	),
 
-	TP_printk("got_bits %d nonblocking_pool_entropy_left %d "
-		  "input_entropy_left %d", __entry->got_bits,
-		  __entry->pool_left, __entry->input_left)
+	TP_printk("reading: nbytes %zu entropy_count %zu",
+		  __entry->nbytes, __entry->entropy_count)
 );
 
 #endif /* _TRACE_RANDOM_H */
