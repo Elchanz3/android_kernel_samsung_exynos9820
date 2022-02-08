@@ -1071,6 +1071,7 @@ static void crng_initialize(struct crng_state *crng)
 =======
 static void invalidate_batched_entropy(void);
 
+<<<<<<< HEAD
 static bool trust_cpu __ro_after_init = IS_ENABLED(CONFIG_RANDOM_TRUST_CPU);
 static int __init parse_trust_cpu(char *arg)
 {
@@ -1199,6 +1200,8 @@ static struct crng_state *select_crng(void)
 
 =======
 >>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
+=======
+>>>>>>> 13c423b6b1d3 (random: inline leaves of rand_initialize())
 /*
  * crng_fast_load() can be called by code in the interrupt service
  * path.  So we can't afford to dilly-dally.
@@ -2455,6 +2458,7 @@ void get_random_bytes_arch(void *buf, int nbytes)
 }
 EXPORT_SYMBOL(get_random_bytes_arch);
 
+<<<<<<< HEAD
 
 /*
  * init_std_data - initialize pool with system data
@@ -2485,7 +2489,14 @@ static void init_std_data(struct entropy_store *r)
 		mix_pool_bytes(r, &rv, sizeof(rv));
 	}
 	mix_pool_bytes(r, utsname(), sizeof(*(utsname())));
+=======
+static bool trust_cpu __ro_after_init = IS_ENABLED(CONFIG_RANDOM_TRUST_CPU);
+static int __init parse_trust_cpu(char *arg)
+{
+	return kstrtobool(arg, &trust_cpu);
+>>>>>>> 13c423b6b1d3 (random: inline leaves of rand_initialize())
 }
+early_param("random.trust_cpu", parse_trust_cpu);
 
 /*
  * Note that setup_arch() may call add_device_randomness()
@@ -2499,6 +2510,7 @@ static void init_std_data(struct entropy_store *r)
  */
 static int rand_initialize(void)
 {
+<<<<<<< HEAD
 <<<<<<< HEAD
 	init_std_data(&input_pool);
 	init_std_data(&blocking_pool);
@@ -2514,6 +2526,38 @@ static int rand_initialize(void)
 =======
 	crng_initialize();
 >>>>>>> d0841f7e4ae6 (random: use RDSEED instead of RDRAND in entropy extraction)
+=======
+	int i;
+	ktime_t now = ktime_get_real();
+	bool arch_init = true;
+	unsigned long rv;
+
+	mix_pool_bytes(&now, sizeof(now));
+	for (i = BLAKE2S_BLOCK_SIZE; i > 0; i -= sizeof(rv)) {
+		if (!arch_get_random_seed_long(&rv) &&
+		    !arch_get_random_long(&rv))
+			rv = random_get_entropy();
+		mix_pool_bytes(&rv, sizeof(rv));
+	}
+	mix_pool_bytes(utsname(), sizeof(*(utsname())));
+
+	extract_entropy(&primary_crng.state[4], sizeof(u32) * 12);
+	for (i = 4; i < 16; i++) {
+		if (!arch_get_random_seed_long_early(&rv) &&
+		    !arch_get_random_long_early(&rv)) {
+			rv = random_get_entropy();
+			arch_init = false;
+		}
+		primary_crng.state[i] ^= rv;
+	}
+	if (arch_init && trust_cpu && crng_init < 2) {
+		invalidate_batched_entropy();
+		crng_init = 2;
+		pr_notice("crng init done (trusting CPU's manufacturer)\n");
+	}
+	primary_crng.init_time = jiffies - CRNG_RESEED_INTERVAL - 1;
+
+>>>>>>> 13c423b6b1d3 (random: inline leaves of rand_initialize())
 	if (ratelimit_disable) {
 		urandom_warning.interval = 0;
 		unseeded_warning.interval = 0;
