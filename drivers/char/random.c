@@ -2695,15 +2695,18 @@ static int write_pool(const char __user *buffer, size_t count)
 >>>>>>> 166f9970b82a (random: access input_pool_data directly rather than through pointer)
 {
 	size_t bytes;
+<<<<<<< HEAD
 	__u32 t, buf[16];
+=======
+	u8 buf[BLAKE2S_BLOCK_SIZE];
+>>>>>>> 2d9c1b42a51c (random: do not xor RDRAND when writing into /dev/random)
 	const char __user *p = buffer;
 
 	while (count > 0) {
-		int b, i = 0;
-
 		bytes = min(count, sizeof(buf));
-		if (copy_from_user(&buf, p, bytes))
+		if (copy_from_user(buf, p, bytes))
 			return -EFAULT;
+<<<<<<< HEAD
 
 		for (b = bytes ; b > 0 ; b -= sizeof(__u32), i++) {
 			if (!arch_get_random_int(&t))
@@ -2715,6 +2718,11 @@ static int write_pool(const char __user *buffer, size_t count)
 		p += bytes;
 
 		mix_pool_bytes(r, buf, bytes);
+=======
+		count -= bytes;
+		p += bytes;
+		mix_pool_bytes(buf, bytes);
+>>>>>>> 2d9c1b42a51c (random: do not xor RDRAND when writing into /dev/random)
 		cond_resched();
 	}
 
