@@ -302,6 +302,7 @@
 #include <asm/irq_regs.h>
 #include <asm/io.h>
 
+<<<<<<< HEAD
 #define CREATE_TRACE_POINTS
 #include <trace/events/random.h>
 
@@ -468,6 +469,8 @@ enum poolinfo {
 =======
 =======
 >>>>>>> f8a196cf4751 (random: remove ifdef'd out interrupt bench)
+=======
+>>>>>>> 707c01fe19eb (random: remove unused tracepoints)
 enum {
 	POOL_BITS = BLAKE2S_HASH_SIZE * 8,
 	POOL_MIN_BITS = POOL_BITS /* No point in settling for less. */
@@ -737,10 +740,16 @@ static void mix_pool_bytes(const void *in, size_t nbytes)
 {
 	unsigned long flags;
 
+<<<<<<< HEAD
 	trace_mix_pool_bytes(r->name, nbytes, _RET_IP_);
 	spin_lock_irqsave(&r->lock, flags);
 	_mix_pool_bytes(r, in, nbytes);
 	spin_unlock_irqrestore(&r->lock, flags);
+=======
+	spin_lock_irqsave(&input_pool.lock, flags);
+	_mix_pool_bytes(in, nbytes);
+	spin_unlock_irqrestore(&input_pool.lock, flags);
+>>>>>>> 707c01fe19eb (random: remove unused tracepoints)
 }
 
 struct fast_pool {
@@ -966,8 +975,6 @@ retry:
 		orig = READ_ONCE(input_pool.entropy_count);
 		entropy_count = min_t(unsigned int, POOL_BITS, orig + add);
 	} while (cmpxchg(&input_pool.entropy_count, orig, entropy_count) != orig);
-
-	trace_credit_entropy_bits(nbits, entropy_count, _RET_IP_);
 
 	if (crng_init < 2 && entropy_count >= POOL_MIN_BITS)
 <<<<<<< HEAD
@@ -1749,7 +1756,6 @@ void add_device_randomness(const void *buf, size_t size)
 	if (!crng_ready() && size)
 		crng_slow_load(buf, size);
 
-	trace_add_device_randomness(size, _RET_IP_);
 	spin_lock_irqsave(&input_pool.lock, flags);
 	_mix_pool_bytes(&input_pool, buf, size);
 	_mix_pool_bytes(&input_pool, &time, sizeof(time));
@@ -1851,6 +1857,7 @@ void add_input_randomness(unsigned int type, unsigned int code,
 			     (type << 4) ^ code ^ (code >> 4) ^ value);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	trace_add_input_randomness(ENTROPY_BITS(&input_pool));
 =======
 	trace_add_input_randomness(POOL_ENTROPY_BITS());
@@ -1858,6 +1865,8 @@ void add_input_randomness(unsigned int type, unsigned int code,
 =======
 	trace_add_input_randomness(input_pool.entropy_count);
 >>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
+=======
+>>>>>>> 707c01fe19eb (random: remove unused tracepoints)
 }
 EXPORT_SYMBOL_GPL(add_input_randomness);
 
@@ -2003,6 +2012,7 @@ void add_disk_randomness(struct gendisk *disk)
 	add_timer_randomness(disk->random, 0x100 + disk_devt(disk));
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	trace_add_disk_randomness(disk_devt(disk), ENTROPY_BITS(&input_pool));
 =======
 	trace_add_disk_randomness(disk_devt(disk), POOL_ENTROPY_BITS());
@@ -2010,6 +2020,8 @@ void add_disk_randomness(struct gendisk *disk)
 =======
 	trace_add_disk_randomness(disk_devt(disk), input_pool.entropy_count);
 >>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
+=======
+>>>>>>> 707c01fe19eb (random: remove unused tracepoints)
 }
 EXPORT_SYMBOL_GPL(add_disk_randomness);
 #endif
@@ -2173,6 +2185,7 @@ static void extract_entropy(void *buf, size_t nbytes)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	/*
 	 * If we have an architectural hardware random number
 	 * generator, use it for SHA's initial vector
@@ -2256,6 +2269,8 @@ static ssize_t _extract_entropy(struct entropy_store *r, void *buf,
 		if (!arch_get_random_long(&block.rdrand[i]))
 			block.rdrand[i] = random_get_entropy();
 =======
+=======
+>>>>>>> 707c01fe19eb (random: remove unused tracepoints)
 	for (i = 0; i < ARRAY_SIZE(block.rdseed); ++i) {
 		if (!arch_get_random_seed_long(&block.rdseed[i]) &&
 		    !arch_get_random_long(&block.rdseed[i]))
@@ -2447,8 +2462,6 @@ static void _get_random_bytes(void *buf, size_t nbytes)
 =======
 	size_t len;
 >>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
-
-	trace_get_random_bytes(nbytes, _RET_IP_);
 
 	if (!nbytes)
 		return;
@@ -2650,8 +2663,12 @@ size_t __must_check get_random_bytes_arch(void *buf, size_t nbytes)
 	u8 *p = buf;
 >>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
+<<<<<<< HEAD
 	trace_get_random_bytes_arch(nbytes, _RET_IP_);
 	while (nbytes) {
+=======
+	while (left) {
+>>>>>>> 707c01fe19eb (random: remove unused tracepoints)
 		unsigned long v;
 <<<<<<< HEAD
 		int chunk = min(nbytes, (int)sizeof(unsigned long));
@@ -2796,6 +2813,7 @@ void rand_initialize_disk(struct gendisk *disk)
 #endif
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 static ssize_t
 _random_read(int nonblock, char __user *buf, size_t nbytes)
 =======
@@ -2845,6 +2863,8 @@ static ssize_t urandom_read_nowarn(struct file *file, char __user *buf,
 		if (n > 0)
 			return n;
 =======
+=======
+>>>>>>> 707c01fe19eb (random: remove unused tracepoints)
 static ssize_t urandom_read(struct file *file, char __user *buf, size_t nbytes,
 			    loff_t *ppos)
 {
@@ -2861,6 +2881,11 @@ static ssize_t urandom_read(struct file *file, char __user *buf, size_t nbytes,
 		if (signal_pending(current))
 			return -ERESTARTSYS;
 	}
+<<<<<<< HEAD
+=======
+
+	return get_random_bytes_user(buf, nbytes);
+>>>>>>> 707c01fe19eb (random: remove unused tracepoints)
 }
 
 static ssize_t random_read(struct file *file, char __user *buf, size_t nbytes,
@@ -2876,6 +2901,7 @@ urandom_read(struct file *file, char __user *buf, size_t nbytes, loff_t *ppos)
 	static int maxwarn = 10;
 	int ret;
 
+<<<<<<< HEAD
 	if (!crng_ready() && maxwarn > 0) {
 		maxwarn--;
 		if (__ratelimit(&urandom_warning))
@@ -2890,6 +2916,12 @@ urandom_read(struct file *file, char __user *buf, size_t nbytes, loff_t *ppos)
 	ret = extract_crng_user(buf, nbytes);
 	trace_urandom_read(8 * nbytes, 0, ENTROPY_BITS(&input_pool));
 	return ret;
+=======
+	ret = wait_for_random_bytes();
+	if (ret != 0)
+		return ret;
+	return get_random_bytes_user(buf, nbytes);
+>>>>>>> 707c01fe19eb (random: remove unused tracepoints)
 }
 
 static unsigned int random_poll(struct file *file, poll_table *wait)
@@ -3150,7 +3182,11 @@ SYSCALL_DEFINE3(getrandom, char __user *, buf, size_t, count, unsigned int,
 		if (unlikely(ret))
 			return ret;
 	}
+<<<<<<< HEAD
 	return urandom_read(NULL, buf, count, NULL);
+=======
+	return get_random_bytes_user(buf, count);
+>>>>>>> 707c01fe19eb (random: remove unused tracepoints)
 }
 
 /********************************************************************
