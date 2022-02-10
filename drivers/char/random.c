@@ -305,6 +305,7 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/random.h>
 
+<<<<<<< HEAD
 /* #define ADD_INTERRUPT_BENCH */
 
 <<<<<<< HEAD
@@ -465,6 +466,8 @@ enum poolinfo {
 	POOL_MIN_FRACBITS = POOL_MIN_BITS << POOL_ENTROPY_SHIFT
 >>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
 =======
+=======
+>>>>>>> f8a196cf4751 (random: remove ifdef'd out interrupt bench)
 enum {
 	POOL_BITS = BLAKE2S_HASH_SIZE * 8,
 	POOL_MIN_BITS = POOL_BITS /* No point in settling for less. */
@@ -1860,6 +1863,7 @@ EXPORT_SYMBOL_GPL(add_input_randomness);
 
 static DEFINE_PER_CPU(struct fast_pool, irq_randomness);
 
+<<<<<<< HEAD
 #ifdef ADD_INTERRUPT_BENCH
 static unsigned long avg_cycles, avg_deviation;
 
@@ -1882,6 +1886,9 @@ static void add_interrupt_bench(cycles_t start)
 #endif
 
 static __u32 get_reg(struct fast_pool *f, struct pt_regs *regs)
+=======
+static u32 get_reg(struct fast_pool *f, struct pt_regs *regs)
+>>>>>>> f8a196cf4751 (random: remove ifdef'd out interrupt bench)
 {
 <<<<<<< HEAD
 	__u32 *ptr = (__u32 *) regs;
@@ -1933,7 +1940,6 @@ void add_interrupt_randomness(int irq, int irq_flags)
 		(sizeof(ip) > 4) ? ip >> 32 : get_reg(fast_pool, regs);
 
 	fast_mix(fast_pool);
-	add_interrupt_bench(cycles);
 
 	if (unlikely(crng_init == 0)) {
 <<<<<<< HEAD
@@ -3281,22 +3287,6 @@ struct ctl_table random_table[] = {
 		.mode		= 0444,
 		.proc_handler	= proc_do_uuid,
 	},
-#ifdef ADD_INTERRUPT_BENCH
-	{
-		.procname	= "add_interrupt_avg_cycles",
-		.data		= &avg_cycles,
-		.maxlen		= sizeof(avg_cycles),
-		.mode		= 0444,
-		.proc_handler	= proc_doulongvec_minmax,
-	},
-	{
-		.procname	= "add_interrupt_avg_deviation",
-		.data		= &avg_deviation,
-		.maxlen		= sizeof(avg_deviation),
-		.mode		= 0444,
-		.proc_handler	= proc_doulongvec_minmax,
-	},
-#endif
 	{ }
 };
 #endif	/* CONFIG_SYSCTL */
