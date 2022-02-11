@@ -601,7 +601,11 @@ static void _extract_entropy(void *buf, size_t nbytes);
 >>>>>>> ccf535b5077a (random: use computational hash for entropy extraction)
 =======
 static void extract_entropy(void *buf, size_t nbytes);
+<<<<<<< HEAD
 >>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
+=======
+static bool drain_entropy(void *buf, size_t nbytes);
+>>>>>>> 65419e900306 (random: introduce drain_entropy() helper to declutter crng_reseed())
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1335,6 +1339,7 @@ static void crng_reseed(void)
 {
 	unsigned long flags;
 <<<<<<< HEAD
+<<<<<<< HEAD
 	int i, entropy_count;
 	union {
 <<<<<<< HEAD
@@ -1409,10 +1414,13 @@ static void crng_reseed(void)
 =======
 =======
 	int entropy_count;
+=======
+>>>>>>> 65419e900306 (random: introduce drain_entropy() helper to declutter crng_reseed())
 	unsigned long next_gen;
 	u8 key[CHACHA20_KEY_SIZE];
 	bool finalize_init = false;
 
+<<<<<<< HEAD
 	/*
 	 * First we make sure we have POOL_MIN_BITS of entropy in the pool,
 	 * and then we drain all of it. Only then can we extract a new key.
@@ -1426,6 +1434,11 @@ static void crng_reseed(void)
 	extract_entropy(key, sizeof(key));
 	wake_up_interruptible(&random_write_wait);
 	kill_fasync(&fasync, SIGIO, POLL_OUT);
+=======
+	/* Only reseed if we can, to prevent brute forcing a small amount of new bits. */
+	if (!drain_entropy(key, sizeof(key)))
+		return;
+>>>>>>> 65419e900306 (random: introduce drain_entropy() helper to declutter crng_reseed())
 
 	/*
 	 * We copy the new key into the base_crng, overwriting the old one,
@@ -2307,6 +2320,7 @@ static ssize_t _extract_entropy(struct entropy_store *r, void *buf,
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 /*
  * This function extracts randomness from the "entropy pool", and
  * returns it in a buffer.
@@ -2412,6 +2426,27 @@ static ssize_t extract_entropy_user(struct entropy_store *r, void __user *buf,
 
 =======
 >>>>>>> 62a2b4bd3ec9 (random: simplify entropy debiting)
+=======
+/*
+ * First we make sure we have POOL_MIN_BITS of entropy in the pool, and then we
+ * set the entropy count to zero (but don't actually touch any data). Only then
+ * can we extract a new key with extract_entropy().
+ */
+static bool drain_entropy(void *buf, size_t nbytes)
+{
+	unsigned int entropy_count;
+	do {
+		entropy_count = READ_ONCE(input_pool.entropy_count);
+		if (entropy_count < POOL_MIN_BITS)
+			return false;
+	} while (cmpxchg(&input_pool.entropy_count, entropy_count, 0) != entropy_count);
+	extract_entropy(buf, nbytes);
+	wake_up_interruptible(&random_write_wait);
+	kill_fasync(&fasync, SIGIO, POLL_OUT);
+	return true;
+}
+
+>>>>>>> 65419e900306 (random: introduce drain_entropy() helper to declutter crng_reseed())
 #define warn_unseeded_randomness(previous) \
 	_warn_unseeded_randomness(__func__, (void *)_RET_IP_, (previous))
 
