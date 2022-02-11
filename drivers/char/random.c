@@ -3390,6 +3390,7 @@ static void try_to_generate_entropy(void)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 /*
  * Wait for the urandom pool to be seeded and thus guaranteed to supply
  * cryptographically secure random numbers. This applies to: the /dev/urandom
@@ -3764,6 +3765,63 @@ urandom_read(struct file *file, char __user *buf, size_t nbytes, loff_t *ppos)
 		return ret;
 	return get_random_bytes_user(buf, nbytes);
 >>>>>>> 707c01fe19eb (random: remove unused tracepoints)
+=======
+
+/**********************************************************************
+ *
+ * Userspace reader/writer interfaces.
+ *
+ * getrandom(2) is the primary modern interface into the RNG and should
+ * be used in preference to anything else.
+ *
+ * Reading from /dev/random has the same functionality as calling
+ * getrandom(2) with flags=0. In earlier versions, however, it had
+ * vastly different semantics and should therefore be avoided, to
+ * prevent backwards compatibility issues.
+ *
+ * Reading from /dev/urandom has the same functionality as calling
+ * getrandom(2) with flags=GRND_INSECURE. Because it does not block
+ * waiting for the RNG to be ready, it should not be used.
+ *
+ * Writing to either /dev/random or /dev/urandom adds entropy to
+ * the input pool but does not credit it.
+ *
+ * Polling on /dev/random indicates when the RNG is initialized, on
+ * the read side, and when it wants new entropy, on the write side.
+ *
+ * Both /dev/random and /dev/urandom have the same set of ioctls for
+ * adding entropy, getting the entropy count, zeroing the count, and
+ * reseeding the crng.
+ *
+ **********************************************************************/
+
+SYSCALL_DEFINE3(getrandom, char __user *, buf, size_t, count, unsigned int,
+		flags)
+{
+	if (flags & ~(GRND_NONBLOCK | GRND_RANDOM | GRND_INSECURE))
+		return -EINVAL;
+
+	/*
+	 * Requesting insecure and blocking randomness at the same time makes
+	 * no sense.
+	 */
+	if ((flags & (GRND_INSECURE | GRND_RANDOM)) == (GRND_INSECURE | GRND_RANDOM))
+		return -EINVAL;
+
+	if (count > INT_MAX)
+		count = INT_MAX;
+
+	if (!(flags & GRND_INSECURE) && !crng_ready()) {
+		int ret;
+
+		if (flags & GRND_NONBLOCK)
+			return -EAGAIN;
+		ret = wait_for_random_bytes();
+		if (unlikely(ret))
+			return ret;
+	}
+	return get_random_bytes_user(buf, count);
+>>>>>>> c3502a795f6a (random: group userspace read/write functions)
 }
 
 static unsigned int random_poll(struct file *file, poll_table *wait)
@@ -3869,6 +3927,32 @@ static ssize_t random_write(struct file *file, const char __user *buffer,
 	return (ssize_t)count;
 }
 
+static ssize_t urandom_read(struct file *file, char __user *buf, size_t nbytes,
+			    loff_t *ppos)
+{
+	static int maxwarn = 10;
+
+	if (!crng_ready() && maxwarn > 0) {
+		maxwarn--;
+		if (__ratelimit(&urandom_warning))
+			pr_notice("%s: uninitialized urandom read (%zd bytes read)\n",
+				  current->comm, nbytes);
+	}
+
+	return get_random_bytes_user(buf, nbytes);
+}
+
+static ssize_t random_read(struct file *file, char __user *buf, size_t nbytes,
+			   loff_t *ppos)
+{
+	int ret;
+
+	ret = wait_for_random_bytes();
+	if (ret != 0)
+		return ret;
+	return get_random_bytes_user(buf, nbytes);
+}
+
 static long random_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
 	int size, ent_count;
@@ -3877,6 +3961,7 @@ static long random_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 	switch (cmd) {
 	case RNDGETENTCNT:
+<<<<<<< HEAD
 		/* inherently racy, no point locking */
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3886,6 +3971,9 @@ static long random_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 >>>>>>> a88fa6c02cb1 (random: prepend remaining pool constants with POOL_)
 		if (put_user(ent_count, p))
 =======
+=======
+		/* Inherently racy, no point locking. */
+>>>>>>> c3502a795f6a (random: group userspace read/write functions)
 		if (put_user(input_pool.entropy_count, p))
 >>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 			return -EFAULT;
@@ -3983,6 +4071,7 @@ const struct file_operations urandom_fops = {
 	.llseek = noop_llseek,
 };
 
+<<<<<<< HEAD
 SYSCALL_DEFINE3(getrandom, char __user *, buf, size_t, count, unsigned int,
 		flags)
 {
@@ -4031,6 +4120,8 @@ SYSCALL_DEFINE3(getrandom, char __user *, buf, size_t, count, unsigned int,
 >>>>>>> 707c01fe19eb (random: remove unused tracepoints)
 }
 
+=======
+>>>>>>> c3502a795f6a (random: group userspace read/write functions)
 /********************************************************************
  *
  * Sysctl interface
