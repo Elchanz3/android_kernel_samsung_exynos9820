@@ -10,6 +10,7 @@
  * Copyright (C) 2017-2022 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
 >>>>>>> fabaab48f24c (random: add proper SPDX header)
  * Copyright Matt Mackall <mpm@selenic.com>, 2003, 2004, 2005
+<<<<<<< HEAD
  * Copyright Theodore Ts'o, 1994, 1995, 1996, 1997, 1998, 1999.  All
  * rights reserved.
  */
@@ -236,6 +237,29 @@
  *
  *	mknod /dev/random c 1 8
  *	mknod /dev/urandom c 1 9
+=======
+ * Copyright Theodore Ts'o, 1994, 1995, 1996, 1997, 1998, 1999. All rights reserved.
+ *
+ * This driver produces cryptographically secure pseudorandom data. It is divided
+ * into roughly six sections, each with a section header:
+ *
+ *   - Initialization and readiness waiting.
+ *   - Fast key erasure RNG, the "crng".
+ *   - Entropy accumulation and extraction routines.
+ *   - Entropy collection routines.
+ *   - Userspace reader/writer interfaces.
+ *   - Sysctl interface.
+ *
+ * The high level overview is that there is one input pool, into which
+ * various pieces of data are hashed. Some of that data is then "credited" as
+ * having a certain number of bits of entropy. When enough bits of entropy are
+ * available, the hash is finalized and handed as a key to a stream cipher that
+ * expands it indefinitely for various consumers. This key is periodically
+ * refreshed as the various entropy collectors, described below, add data to the
+ * input pool and credit it. There is currently no Fortuna-like scheduler
+ * involved, which can lead to malicious entropy sources causing a premature
+ * reseed, and the entropy estimates are, at best, conservative guesses.
+>>>>>>> b3fa3d153ad2 (random: rewrite header introductory comment)
  */
 
 #include <linux/utsname.h>
