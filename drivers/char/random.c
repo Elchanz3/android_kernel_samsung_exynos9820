@@ -265,11 +265,16 @@
 #include <linux/syscalls.h>
 #include <linux/completion.h>
 #include <linux/uuid.h>
+<<<<<<< HEAD
 #include <linux/freezer.h>
 #include <crypto/chacha20.h>
 
-#include <asm/processor.h>
+=======
 #include <linux/uaccess.h>
+#include <crypto/chacha20.h>
+#include <crypto/blake2s.h>
+>>>>>>> ee5705cffcc8 (random: remove whitespace and reorder includes)
+#include <asm/processor.h>
 #include <asm/irq.h>
 #include <asm/irq_regs.h>
 #include <asm/io.h>
