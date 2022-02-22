@@ -4160,10 +4160,14 @@ static long random_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		if (!capable(CAP_SYS_ADMIN))
 			return -EPERM;
 <<<<<<< HEAD
+<<<<<<< HEAD
 		input_pool.entropy_count = 0;
 		blocking_pool.entropy_count = 0;
 =======
 		if (xchg(&input_pool.entropy_count, 0)) {
+=======
+		if (xchg(&input_pool.entropy_count, 0) >= POOL_MIN_BITS) {
+>>>>>>> 430374f42c21 (random: only wake up writers after zap if threshold was passed)
 			wake_up_interruptible(&random_write_wait);
 			kill_fasync(&fasync, SIGIO, POLL_OUT);
 		}
