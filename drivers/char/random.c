@@ -2734,6 +2734,7 @@ int random_online_cpu(unsigned int cpu)
 }
 #endif
 
+<<<<<<< HEAD
 static u32 get_reg(struct fast_pool *f, struct pt_regs *regs)
 >>>>>>> 40b5b4b62203 (random: clear fast pool, crng, and batches in cpuhp bring up)
 {
@@ -2760,12 +2761,21 @@ static u32 get_reg(struct fast_pool *f, struct pt_regs *regs)
 =======
 	u32 *ptr = (u32 *)regs;
 >>>>>>> 166f9970b82a (random: access input_pool_data directly rather than through pointer)
+=======
+static unsigned long get_reg(struct fast_pool *f, struct pt_regs *regs)
+{
+	unsigned long *ptr = (unsigned long *)regs;
+>>>>>>> 23fc6dcd2935 (random: round-robin registers as ulong, not u32)
 	unsigned int idx;
 
 	if (regs == NULL)
 		return 0;
 	idx = READ_ONCE(f->reg_idx);
+<<<<<<< HEAD
 	if (idx >= sizeof(struct pt_regs) / sizeof(__u32))
+=======
+	if (idx >= sizeof(struct pt_regs) / sizeof(unsigned long))
+>>>>>>> 23fc6dcd2935 (random: round-robin registers as ulong, not u32)
 		idx = 0;
 	ptr += idx++;
 	WRITE_ONCE(f->reg_idx, idx);
