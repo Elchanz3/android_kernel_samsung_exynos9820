@@ -2449,6 +2449,7 @@ int __init rand_initialize(void)
 	return 0;
 }
 
+<<<<<<< HEAD
 /* There is one of these per entropy source */
 struct timer_rand_state {
 	cycles_t last_time;
@@ -2456,6 +2457,8 @@ struct timer_rand_state {
 	unsigned dont_count_entropy:1;
 };
 
+=======
+>>>>>>> ddb672cf1d04 (random: unify cycles_t and jiffies usage and types)
 /*
  * Add device- or boot-specific data to the input pool to help
  * initialize it.
@@ -2466,18 +2469,30 @@ struct timer_rand_state {
  */
 void add_device_randomness(const void *buf, size_t size)
 {
-	unsigned long time = random_get_entropy() ^ jiffies;
-	unsigned long flags;
+	cycles_t cycles = random_get_entropy();
+	unsigned long flags, now = jiffies;
 
 	if (crng_init == 0 && size)
 		crng_pre_init_inject(buf, size, false, false);
 
 	spin_lock_irqsave(&input_pool.lock, flags);
+<<<<<<< HEAD
 	_mix_pool_bytes(&input_pool, buf, size);
 	_mix_pool_bytes(&input_pool, &time, sizeof(time));
+=======
+	_mix_pool_bytes(&cycles, sizeof(cycles));
+	_mix_pool_bytes(&now, sizeof(now));
+	_mix_pool_bytes(buf, size);
+>>>>>>> ddb672cf1d04 (random: unify cycles_t and jiffies usage and types)
 	spin_unlock_irqrestore(&input_pool.lock, flags);
 }
 EXPORT_SYMBOL(add_device_randomness);
+
+/* There is one of these per entropy source */
+struct timer_rand_state {
+	unsigned long last_time;
+	long last_delta, last_delta2;
+};
 
 /*
  * This function adds entropy to the entropy "pool" by using timing
@@ -2487,10 +2502,10 @@ EXPORT_SYMBOL(add_device_randomness);
  * The number "num" is also added to the pool - it should somehow describe
  * the type of event which just happened.  This is currently 0-255 for
  * keyboard scan codes, and 256 upwards for interrupts.
- *
  */
 static void add_timer_randomness(struct timer_rand_state *state, unsigned int num)
 {
+<<<<<<< HEAD
 	struct entropy_store	*r;
 	struct {
 		long jiffies;
@@ -2506,12 +2521,28 @@ static void add_timer_randomness(struct timer_rand_state *state, unsigned int nu
 	sample.num = num;
 	r = &input_pool;
 	mix_pool_bytes(r, &sample, sizeof(sample));
+=======
+	cycles_t cycles = random_get_entropy();
+	unsigned long flags, now = jiffies;
+	long delta, delta2, delta3;
+
+	spin_lock_irqsave(&input_pool.lock, flags);
+	_mix_pool_bytes(&cycles, sizeof(cycles));
+	_mix_pool_bytes(&now, sizeof(now));
+	_mix_pool_bytes(&num, sizeof(num));
+	spin_unlock_irqrestore(&input_pool.lock, flags);
+>>>>>>> ddb672cf1d04 (random: unify cycles_t and jiffies usage and types)
 
 	/*
 	 * Calculate number of bits of randomness we probably added.
 	 * We take into account the first, second and third-order deltas
 	 * in order to make our estimate.
 	 */
+<<<<<<< HEAD
+=======
+	delta = now - READ_ONCE(state->last_time);
+	WRITE_ONCE(state->last_time, now);
+>>>>>>> ddb672cf1d04 (random: unify cycles_t and jiffies usage and types)
 
 	if (!state->dont_count_entropy) {
 		delta = sample.jiffies - state->last_time;
@@ -2826,6 +2857,7 @@ static void mix_interrupt_randomness(struct work_struct *work)
 void add_interrupt_randomness(int irq)
 {
 	enum { MIX_INFLIGHT = 1U << 31 };
+<<<<<<< HEAD
 >>>>>>> 80adfc1fa691 (random: defer fast pool mixing to worker)
 	struct fast_pool *fast_pool = this_cpu_ptr(&irq_randomness);
 	struct pt_regs *regs = get_irq_regs();
@@ -2839,6 +2871,12 @@ void add_interrupt_randomness(int irq)
 =======
 >>>>>>> e0a5363f51f5 (random: deobfuscate irq u32/u64 contributions)
 =======
+=======
+	cycles_t cycles = random_get_entropy();
+	unsigned long now = jiffies;
+	struct fast_pool *fast_pool = this_cpu_ptr(&irq_randomness);
+	struct pt_regs *regs = get_irq_regs();
+>>>>>>> ddb672cf1d04 (random: unify cycles_t and jiffies usage and types)
 	unsigned int new_count;
 >>>>>>> 80adfc1fa691 (random: defer fast pool mixing to worker)
 
@@ -3500,14 +3538,14 @@ static void entropy_timer(unsigned long data)
 static void try_to_generate_entropy(void)
 {
 	struct {
-		unsigned long now;
+		cycles_t cycles;
 		struct timer_list timer;
 	} stack;
 
-	stack.now = random_get_entropy();
+	stack.cycles = random_get_entropy();
 
 	/* Slow counter - or none. Don't even bother */
-	if (stack.now == random_get_entropy())
+	if (stack.cycles == random_get_entropy())
 		return;
 
 	__setup_timer_on_stack(&stack.timer, entropy_timer, 0, 0);
@@ -3518,15 +3556,23 @@ static void try_to_generate_entropy(void)
 		mix_pool_bytes(&input_pool, &stack.now, sizeof(stack.now));
 =======
 			mod_timer(&stack.timer, jiffies + 1);
+<<<<<<< HEAD
 		mix_pool_bytes(&stack.now, sizeof(stack.now));
 >>>>>>> 166f9970b82a (random: access input_pool_data directly rather than through pointer)
+=======
+		mix_pool_bytes(&stack.cycles, sizeof(stack.cycles));
+>>>>>>> ddb672cf1d04 (random: unify cycles_t and jiffies usage and types)
 		schedule();
-		stack.now = random_get_entropy();
+		stack.cycles = random_get_entropy();
 	}
 
 	del_timer_sync(&stack.timer);
 	destroy_timer_on_stack(&stack.timer);
+<<<<<<< HEAD
 	mix_pool_bytes(&input_pool, &stack.now, sizeof(stack.now));
+=======
+	mix_pool_bytes(&stack.cycles, sizeof(stack.cycles));
+>>>>>>> ddb672cf1d04 (random: unify cycles_t and jiffies usage and types)
 }
 
 <<<<<<< HEAD
