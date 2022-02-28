@@ -4335,7 +4335,7 @@ SYSCALL_DEFINE3(getrandom, char __user *, buf, size_t, count, unsigned int,
  *   to avoid breaking old userspaces, but writing to it does not
  *   change any behavior of the RNG.
  *
- * - urandom_min_reseed_secs - fixed to the meaningless value "60".
+ * - urandom_min_reseed_secs - fixed to the value CRNG_RESEED_INTERVAL.
  *   It is writable to avoid breaking old userspaces, but writing
  *   to it does not change any behavior of the RNG.
  *
@@ -4347,6 +4347,7 @@ SYSCALL_DEFINE3(getrandom, char __user *, buf, size_t, count, unsigned int,
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 static int min_read_thresh = 8, min_write_thresh;
 static int max_read_thresh = OUTPUT_POOL_WORDS * 32;
 static int max_write_thresh = INPUT_POOL_WORDS * 32;
@@ -4356,6 +4357,9 @@ static int random_min_urandom_seed = 60;
 static int random_write_wakeup_bits = POOL_MIN_BITS;
 =======
 static int sysctl_random_min_urandom_seed = 60;
+=======
+static int sysctl_random_min_urandom_seed = CRNG_RESEED_INTERVAL / HZ;
+>>>>>>> dd9970a9e068 (random: give sysctl_random_min_urandom_seed a more sensible value)
 static int sysctl_random_write_wakeup_bits = POOL_MIN_BITS;
 >>>>>>> 57332ead20e1 (random: group sysctl functions)
 static int sysctl_poolsize = POOL_BITS;
