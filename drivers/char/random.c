@@ -4402,6 +4402,7 @@ static int proc_do_uuid(struct ctl_table *table, int write,
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 /*
  * Return entropy available scaled to integral bits
  */
@@ -4425,6 +4426,15 @@ static int sysctl_poolsize = POOL_BITS;
 >>>>>>> bb375abdbf11 (random: use linear min-entropy accumulation crediting)
 =======
 >>>>>>> f82262f273f1 (random: always wake up entropy writers after extraction)
+=======
+/* The same as proc_dointvec, but writes don't change anything. */
+static int proc_do_rointvec(struct ctl_table *table, int write, void __user *buffer,
+			    size_t *lenp, loff_t *ppos)
+{
+	return write ? 0 : proc_dointvec(table, 0, buffer, lenp, ppos);
+}
+
+>>>>>>> d2c884e41bc5 (random: don't let 644 read-only sysctls be written to)
 extern struct ctl_table random_table[];
 struct ctl_table random_table[] = {
 	{
@@ -4455,14 +4465,14 @@ struct ctl_table random_table[] = {
 		.data		= &sysctl_random_write_wakeup_bits,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
-		.proc_handler	= proc_dointvec,
+		.proc_handler	= proc_do_rointvec,
 	},
 	{
 		.procname	= "urandom_min_reseed_secs",
 		.data		= &sysctl_random_min_urandom_seed,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
-		.proc_handler	= proc_dointvec,
+		.proc_handler	= proc_do_rointvec,
 	},
 	{
 		.procname	= "boot_id",
