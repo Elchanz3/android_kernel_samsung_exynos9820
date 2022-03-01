@@ -8,11 +8,7 @@
 
 #include <uapi/linux/random.h>
 
-struct random_ready_callback {
-	struct list_head list;
-	void (*func)(struct random_ready_callback *rdy);
-	struct module *owner;
-};
+struct notifier_block;
 
 <<<<<<< HEAD
 extern void add_device_randomness(const void *, unsigned int);
@@ -43,11 +39,18 @@ extern void add_hwgenerator_randomness(const void *buffer, size_t count,
 
 extern void get_random_bytes(void *buf, size_t nbytes);
 extern int wait_for_random_bytes(void);
+<<<<<<< HEAD
 extern int add_random_ready_callback(struct random_ready_callback *rdy);
 extern void del_random_ready_callback(struct random_ready_callback *rdy);
 <<<<<<< HEAD
 extern void get_random_bytes_arch(void *buf, int nbytes);
 =======
+=======
+extern int __init rand_initialize(void);
+extern bool rng_is_initialized(void);
+extern int register_random_ready_notifier(struct notifier_block *nb);
+extern int unregister_random_ready_notifier(struct notifier_block *nb);
+>>>>>>> c8e06a4dc297 (random: replace custom notifier chain with standard one)
 extern size_t __must_check get_random_bytes_arch(void *buf, size_t nbytes);
 >>>>>>> acbf6f4851e3 (random: use hash function for crng_slow_load())
 
