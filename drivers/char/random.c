@@ -2012,14 +2012,18 @@ static ssize_t get_random_bytes_user(void __user *buf, size_t nbytes)
 	while (nbytes) {
 =======
 	do {
+<<<<<<< HEAD
 >>>>>>> 04d681d81b7d (random: do not allow user to keep crng key around on stack)
 		if (large_request && need_resched()) {
+=======
+		if (large_request) {
+>>>>>>> cf8136b35169 (random: check for signal_pending() outside of need_resched() check)
 			if (signal_pending(current)) {
 				if (!ret)
 					ret = -ERESTARTSYS;
 				break;
 			}
-			schedule();
+			cond_resched();
 		}
 
 		chacha20_block(chacha_state, output);
