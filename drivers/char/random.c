@@ -1972,6 +1972,7 @@ EXPORT_SYMBOL(get_random_bytes);
 static ssize_t get_random_bytes_user(void __user *buf, size_t nbytes)
 {
 <<<<<<< HEAD
+<<<<<<< HEAD
 	ssize_t ret = 0, i = CHACHA20_BLOCK_SIZE;
 	__u8 tmp[CHACHA20_BLOCK_SIZE];
 	int large_request = (nbytes > 256);
@@ -1979,6 +1980,9 @@ static ssize_t get_random_bytes_user(void __user *buf, size_t nbytes)
 	bool large_request = nbytes > 256;
 	ssize_t ret = 0;
 	size_t len;
+=======
+	size_t len, left, ret = 0;
+>>>>>>> 50339a2aab7e (random: check for signals every PAGE_SIZE chunk of /dev/[u]random)
 	u32 chacha_state[CHACHA20_BLOCK_SIZE / sizeof(u32)];
 	u8 output[CHACHA20_BLOCK_SIZE];
 
@@ -1990,17 +1994,18 @@ static ssize_t get_random_bytes_user(void __user *buf, size_t nbytes)
 	 * bytes, in case userspace causes copy_to_user() below to sleep
 	 * forever, so that we still retain forward secrecy in that case.
 	 */
-	crng_make_state(chacha_state, (u8 *)&chacha_state[4], CHACHA_KEY_SIZE);
+	crng_make_state(chacha_state, (u8 *)&chacha_state[4], CHACHA20_KEY_SIZE);
 	/*
 	 * However, if we're doing a read of len <= 32, we don't need to
 	 * use chacha_state after, so we can simply return those bytes to
 	 * the user directly.
 	 */
-	if (nbytes <= CHACHA_KEY_SIZE) {
-		ret = copy_to_user(buf, &chacha_state[4], nbytes) ? -EFAULT : nbytes;
+	if (nbytes <= CHACHA20_KEY_SIZE) {
+		ret = nbytes - copy_to_user(buf, &chacha_state[4], nbytes);
 		goto out_zero_chacha;
 	}
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 	if (copy_to_user(buf, output, len))
 		return -EFAULT;
@@ -2026,25 +2031,38 @@ static ssize_t get_random_bytes_user(void __user *buf, size_t nbytes)
 			cond_resched();
 		}
 
+=======
+	for (;;) {
+>>>>>>> 50339a2aab7e (random: check for signals every PAGE_SIZE chunk of /dev/[u]random)
 		chacha20_block(chacha_state, output);
 		if (unlikely(chacha_state[12] == 0))
 			++chacha_state[13];
 
 		len = min_t(size_t, nbytes, CHACHA20_BLOCK_SIZE);
-		if (copy_to_user(buf, output, len)) {
-			ret = -EFAULT;
+		left = copy_to_user(buf, output, len);
+		if (left) {
+			ret += len - left;
 			break;
 		}
 
-		nbytes -= len;
 		buf += len;
 		ret += len;
-	} while (nbytes);
+		nbytes -= len;
+		if (!nbytes)
+			break;
+
+		BUILD_BUG_ON(PAGE_SIZE % CHACHA20_BLOCK_SIZE != 0);
+		if (ret % PAGE_SIZE == 0) {
+			if (signal_pending(current))
+				break;
+			cond_resched();
+		}
+	}
 
 	memzero_explicit(output, sizeof(output));
 out_zero_chacha:
 	memzero_explicit(chacha_state, sizeof(chacha_state));
-	return ret;
+	return ret ? ret : -EFAULT;
 }
 
 /*
