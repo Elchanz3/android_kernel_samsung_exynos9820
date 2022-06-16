@@ -3015,8 +3015,12 @@ void add_interrupt_randomness(int irq)
 		return;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	r = &input_pool;
 	if (!spin_trylock(&r->lock))
+=======
+	if (new_count < 1024 && !time_is_before_jiffies(fast_pool->last + HZ))
+>>>>>>> f2944c94eb2b (random: schedule mix_interrupt_randomness() less often)
 		return;
 
 	fast_pool->last = now;
