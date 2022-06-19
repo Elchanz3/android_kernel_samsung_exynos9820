@@ -1670,10 +1670,21 @@ static int grcan_probe(struct platform_device *ofdev)
 	/* Compare GRLIB version number with the first that does not
 	 * have the tx bug (see start_xmit)
 	 */
+<<<<<<< HEAD
 	err = of_property_read_u32(np, "systemid", &sysid);
 	if (!err && ((sysid & GRLIB_VERSION_MASK)
 		     >= GRCAN_TXBUG_SAFE_GRLIB_VERSION))
 		txbug = false;
+=======
+	sysid_parent = of_find_node_by_path("/ambapp0");
+	if (sysid_parent) {
+		err = of_property_read_u32(sysid_parent, "systemid", &sysid);
+		if (!err && ((sysid & GRLIB_VERSION_MASK) >=
+			     GRCAN_TXBUG_SAFE_GRLIB_VERSION))
+			txbug = false;
+		of_node_put(sysid_parent);
+	}
+>>>>>>> 1e92fc73066e (can: grcan: grcan_probe(): remove extra of_node_get())
 
 	err = of_property_read_u32(np, "freq", &ambafreq);
 	if (err) {
