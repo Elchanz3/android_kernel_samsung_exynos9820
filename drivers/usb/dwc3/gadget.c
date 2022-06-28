@@ -3781,9 +3781,12 @@ static irqreturn_t dwc3_process_event_buf(struct dwc3_event_buffer *evt)
 	}
 
 	evt->count = 0;
+<<<<<<< HEAD
 #if IS_ENABLED(DWC3_GADGET_IRQ_ORG)
 	evt->flags &= ~DWC3_EVENT_PENDING;
 #endif
+=======
+>>>>>>> 11f2be20594a (usb: dwc3: gadget: Fix event pending check)
 	ret = IRQ_HANDLED;
 
 #if IS_ENABLED(DWC3_GADGET_IRQ_ORG)
@@ -3797,6 +3800,9 @@ static irqreturn_t dwc3_process_event_buf(struct dwc3_event_buffer *evt)
 		dwc3_writel(dwc->regs, DWC3_GEVNTCOUNT(0), DWC3_GEVNTCOUNT_EHB);
 		dwc3_writel(dwc->regs, DWC3_DEV_IMOD(0), dwc->imod_interval);
 	}
+
+	/* Keep the clearing of DWC3_EVENT_PENDING at the end */
+	evt->flags &= ~DWC3_EVENT_PENDING;
 
 	return ret;
 }
