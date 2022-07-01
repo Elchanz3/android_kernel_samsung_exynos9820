@@ -1391,8 +1391,12 @@ static void gsm_control_retransmit(unsigned long data)
 	spin_lock_irqsave(&gsm->control_lock, flags);
 	ctrl = gsm->pending_cmd;
 	if (ctrl) {
+<<<<<<< HEAD
 		gsm->cretries--;
 		if (gsm->cretries == 0) {
+=======
+		if (gsm->cretries == 0 || !gsm->dlci[0] || gsm->dlci[0]->dead) {
+>>>>>>> 7d986ee1986a (tty: n_gsm: fix packet re-transmission without open control channel)
 			gsm->pending_cmd = NULL;
 			ctrl->error = -ETIMEDOUT;
 			ctrl->done = 1;
