@@ -568,9 +568,28 @@ static int __init exynos_sysmmu_probe(struct platform_device *pdev)
 	iommu_device_set_fwnode(&data->iommu, &dev->of_node->fwnode);
 
 	ret = iommu_device_register(&data->iommu);
+<<<<<<< HEAD
 	if (ret) {
 		dev_err(dev, "Failed to register device\n");
 		return ret;
+=======
+	if (ret)
+		goto err_iommu_register;
+
+	platform_set_drvdata(pdev, data);
+
+	__sysmmu_get_version(data);
+	if (PG_ENT_SHIFT < 0) {
+		if (MMU_MAJ_VER(data->version) < 5) {
+			PG_ENT_SHIFT = SYSMMU_PG_ENT_SHIFT;
+			LV1_PROT = SYSMMU_LV1_PROT;
+			LV2_PROT = SYSMMU_LV2_PROT;
+		} else {
+			PG_ENT_SHIFT = SYSMMU_V5_PG_ENT_SHIFT;
+			LV1_PROT = SYSMMU_V5_LV1_PROT;
+			LV2_PROT = SYSMMU_V5_LV2_PROT;
+		}
+>>>>>>> 169dbe180b1e (iommu/exynos: Handle failed IOMMU device registration properly)
 	}
 
 	pm_runtime_enable(dev);
@@ -584,6 +603,10 @@ static int __init exynos_sysmmu_probe(struct platform_device *pdev)
 			MMU_REV_VER(data->version));
 
 	return 0;
+
+err_iommu_register:
+	iommu_device_sysfs_remove(&data->iommu);
+	return ret;
 }
 
 static bool __sysmmu_disable(struct sysmmu_drvdata *drvdata)
