@@ -941,6 +941,7 @@ static void process_random_ready_list(void)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 /*
  * Credit (or debit) the entropy store with n bits of entropy.
  * Use credit_entropy_bits_safe() if the value comes from userspace
@@ -1160,6 +1161,12 @@ static int credit_entropy_bits_safe(struct entropy_store *r, int nbits)
 		printk_deferred(KERN_NOTICE "random: %s called from %pS with crng_init=%d\n",
 				func_name, caller, crng_init);
 }
+=======
+#define warn_unseeded_randomness() \
+	if (IS_ENABLED(CONFIG_WARN_ALL_UNSEEDED_RANDOM) && !crng_ready()) \
+		printk_deferred(KERN_NOTICE "random: %s called from %pS with crng_init=%d\n", \
+				__func__, (void *)_RET_IP_, crng_init)
+>>>>>>> df4cb7f30e83 (Revert "Revert "char/random: silence a lockdep splat with printk()"")
 
 
 >>>>>>> 25061d366b70 (random: group initialization wait functions)
