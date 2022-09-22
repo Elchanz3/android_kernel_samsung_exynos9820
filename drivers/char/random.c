@@ -2753,10 +2753,14 @@ struct fast_pool {
 	unsigned long last;
 	unsigned int count;
 <<<<<<< HEAD
+<<<<<<< HEAD
 	u16 reg_idx;
 =======
 	struct work_struct mix;
 >>>>>>> ed780fa488de (random: avoid reading two cache lines on irq randomness)
+=======
+	struct timer_list mix;
+>>>>>>> 1426ff001bb2 (random: use expired timer rather than wq for mixing fast pool)
 };
 
 static DEFINE_PER_CPU(struct fast_pool, irq_randomness) = {
@@ -2836,6 +2840,7 @@ int random_online_cpu(unsigned int cpu)
 #endif
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 static u32 get_reg(struct fast_pool *f, struct pt_regs *regs)
 >>>>>>> 40b5b4b62203 (random: clear fast pool, crng, and batches in cpuhp bring up)
 {
@@ -2899,8 +2904,11 @@ void add_interrupt_randomness(int irq, int irq_flags)
 =======
 =======
 static void mix_interrupt_randomness(struct work_struct *work)
+=======
+static void mix_interrupt_randomness(unsigned long data)
+>>>>>>> 1426ff001bb2 (random: use expired timer rather than wq for mixing fast pool)
 {
-	struct fast_pool *fast_pool = container_of(work, struct fast_pool, mix);
+	struct fast_pool *fast_pool = (struct fast_pool *)data;
 	/*
 	 * The size of the copied stack pool is explicitly 16 bytes so that we
 	 * tax mix_pool_byte()'s compression function the same amount on all
@@ -3044,6 +3052,7 @@ void add_interrupt_randomness(int irq)
 >>>>>>> f2944c94eb2b (random: schedule mix_interrupt_randomness() less often)
 		return;
 
+<<<<<<< HEAD
 	fast_pool->last = now;
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3073,6 +3082,16 @@ void add_interrupt_randomness(int irq)
 <<<<<<< HEAD
 	/* award one bit for the contents of the fast pool */
 	credit_entropy_bits(r, credit + 1);
+=======
+	if (unlikely(!fast_pool->mix.data))
+		setup_timer(&fast_pool->mix, mix_interrupt_randomness, (unsigned long)fast_pool);
+
+	fast_pool->count |= MIX_INFLIGHT;
+	if (!timer_pending(&fast_pool->mix)) {
+		fast_pool->mix.expires = jiffies;
+		add_timer_on(&fast_pool->mix, raw_smp_processor_id());
+	}
+>>>>>>> 1426ff001bb2 (random: use expired timer rather than wq for mixing fast pool)
 }
 EXPORT_SYMBOL_GPL(add_interrupt_randomness);
 
