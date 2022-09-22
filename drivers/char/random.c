@@ -2749,11 +2749,14 @@ void add_bootloader_randomness(const void *buf, size_t size)
 EXPORT_SYMBOL_GPL(add_bootloader_randomness);
 
 struct fast_pool {
-	struct work_struct mix;
 	unsigned long pool[4];
 	unsigned long last;
 	unsigned int count;
+<<<<<<< HEAD
 	u16 reg_idx;
+=======
+	struct work_struct mix;
+>>>>>>> ed780fa488de (random: avoid reading two cache lines on irq randomness)
 };
 
 static DEFINE_PER_CPU(struct fast_pool, irq_randomness) = {
