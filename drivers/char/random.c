@@ -2924,6 +2924,7 @@ static void mix_interrupt_randomness(struct work_struct *work)
 	fast_pool->last = jiffies;
 	local_irq_enable();
 
+<<<<<<< HEAD
 	if (unlikely(crng_init == 0)) {
 		crng_pre_init_inject(pool, sizeof(pool), true);
 		mix_pool_bytes(pool, sizeof(pool));
@@ -2931,6 +2932,10 @@ static void mix_interrupt_randomness(struct work_struct *work)
 		mix_pool_bytes(pool, sizeof(pool));
 		credit_entropy_bits(1);
 	}
+=======
+	mix_pool_bytes(pool, sizeof(pool));
+	credit_init_bits(clamp_t(unsigned int, (count & U16_MAX) / 64, 1, sizeof(pool) * 8));
+>>>>>>> ec0541c659e0 (random: clamp credited irq bits to maximum mixed)
 
 	memzero_explicit(pool, sizeof(pool));
 }
