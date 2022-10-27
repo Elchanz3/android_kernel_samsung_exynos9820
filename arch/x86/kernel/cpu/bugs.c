@@ -1909,6 +1909,11 @@ static ssize_t srbds_show_state(char *buf)
 	return sprintf(buf, "%s\n", srbds_strings[srbds_mitigation]);
 }
 
+static ssize_t retbleed_show_state(char *buf)
+{
+	return sprintf(buf, "Vulnerable\n");
+}
+
 static ssize_t cpu_show_common(struct device *dev, struct device_attribute *attr,
 			       char *buf, unsigned int bug)
 {
@@ -1954,7 +1959,13 @@ static ssize_t cpu_show_common(struct device *dev, struct device_attribute *attr
 	case X86_BUG_MMIO_UNKNOWN:
 		return mmio_stale_data_show_state(buf);
 
+<<<<<<< HEAD
 >>>>>>> 0cbdd73d9633 (x86/bugs: Add "unknown" reporting for MMIO Stale Data)
+=======
+	case X86_BUG_RETBLEED:
+		return retbleed_show_state(buf);
+
+>>>>>>> f8fcd872ae66 (x86/bugs: Report AMD retbleed vulnerability)
 	default:
 		break;
 	}
@@ -2016,5 +2027,13 @@ ssize_t cpu_show_mmio_stale_data(struct device *dev, struct device_attribute *at
 	else
 		return cpu_show_common(dev, attr, buf, X86_BUG_MMIO_STALE_DATA);
 }
+<<<<<<< HEAD
 >>>>>>> 0cbdd73d9633 (x86/bugs: Add "unknown" reporting for MMIO Stale Data)
+=======
+
+ssize_t cpu_show_retbleed(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	return cpu_show_common(dev, attr, buf, X86_BUG_RETBLEED);
+}
+>>>>>>> f8fcd872ae66 (x86/bugs: Report AMD retbleed vulnerability)
 #endif

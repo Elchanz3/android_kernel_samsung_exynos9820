@@ -558,6 +558,21 @@ ssize_t __weak cpu_show_srbds(struct device *dev,
 	return sprintf(buf, "Not affected\n");
 }
 
+<<<<<<< HEAD
+=======
+ssize_t __weak cpu_show_mmio_stale_data(struct device *dev,
+					struct device_attribute *attr, char *buf)
+{
+	return sysfs_emit(buf, "Not affected\n");
+}
+
+ssize_t __weak cpu_show_retbleed(struct device *dev,
+				 struct device_attribute *attr, char *buf)
+{
+	return sysfs_emit(buf, "Not affected\n");
+}
+
+>>>>>>> f8fcd872ae66 (x86/bugs: Report AMD retbleed vulnerability)
 static DEVICE_ATTR(meltdown, 0444, cpu_show_meltdown, NULL);
 static DEVICE_ATTR(spectre_v1, 0444, cpu_show_spectre_v1, NULL);
 static DEVICE_ATTR(spectre_v2, 0444, cpu_show_spectre_v2, NULL);
@@ -567,6 +582,11 @@ static DEVICE_ATTR(mds, 0444, cpu_show_mds, NULL);
 static DEVICE_ATTR(tsx_async_abort, 0444, cpu_show_tsx_async_abort, NULL);
 static DEVICE_ATTR(itlb_multihit, 0444, cpu_show_itlb_multihit, NULL);
 static DEVICE_ATTR(srbds, 0444, cpu_show_srbds, NULL);
+<<<<<<< HEAD
+=======
+static DEVICE_ATTR(mmio_stale_data, 0444, cpu_show_mmio_stale_data, NULL);
+static DEVICE_ATTR(retbleed, 0444, cpu_show_retbleed, NULL);
+>>>>>>> f8fcd872ae66 (x86/bugs: Report AMD retbleed vulnerability)
 
 static struct attribute *cpu_root_vulnerabilities_attrs[] = {
 	&dev_attr_meltdown.attr,
@@ -578,6 +598,11 @@ static struct attribute *cpu_root_vulnerabilities_attrs[] = {
 	&dev_attr_tsx_async_abort.attr,
 	&dev_attr_itlb_multihit.attr,
 	&dev_attr_srbds.attr,
+<<<<<<< HEAD
+=======
+	&dev_attr_mmio_stale_data.attr,
+	&dev_attr_retbleed.attr,
+>>>>>>> f8fcd872ae66 (x86/bugs: Report AMD retbleed vulnerability)
 	NULL
 };
 

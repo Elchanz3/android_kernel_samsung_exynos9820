@@ -405,6 +405,10 @@
 =======
 #define X86_BUG_MMIO_STALE_DATA		X86_BUG(25) /* CPU is affected by Processor MMIO Stale Data vulnerabilities */
 #define X86_BUG_MMIO_UNKNOWN		X86_BUG(26) /* CPU is too old and its MMIO Stale Data status is unknown */
+<<<<<<< HEAD
 >>>>>>> 0cbdd73d9633 (x86/bugs: Add "unknown" reporting for MMIO Stale Data)
+=======
+#define X86_BUG_RETBLEED		X86_BUG(27) /* CPU is affected by RETBleed */
+>>>>>>> f8fcd872ae66 (x86/bugs: Report AMD retbleed vulnerability)
 
 #endif /* _ASM_X86_CPUFEATURES_H */
