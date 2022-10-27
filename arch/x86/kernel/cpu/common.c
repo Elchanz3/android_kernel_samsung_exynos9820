@@ -1154,6 +1154,7 @@ static void __init cpu_set_bug_bits(struct cpuinfo_x86 *c)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> 0cbdd73d9633 (x86/bugs: Add "unknown" reporting for MMIO Stale Data)
 =======
 	if (cpu_matches(cpu_vuln_blacklist, RETBLEED))
@@ -1161,6 +1162,12 @@ static void __init cpu_set_bug_bits(struct cpuinfo_x86 *c)
 	if ((cpu_matches(cpu_vuln_blacklist, RETBLEED) || (ia32_cap & ARCH_CAP_RSBA)))
 >>>>>>> 4b9a6e97a32a (x86/bugs: Report Intel retbleed vulnerability)
 		setup_force_cpu_bug(X86_BUG_RETBLEED);
+=======
+	if (!cpu_has(c, X86_FEATURE_BTC_NO)) {
+		if (cpu_matches(cpu_vuln_blacklist, RETBLEED) || (ia32_cap & ARCH_CAP_RSBA))
+			setup_force_cpu_bug(X86_BUG_RETBLEED);
+	}
+>>>>>>> 2ec38cb7455b (x86/cpu/amd: Enumerate BTC_NO)
 
 >>>>>>> f8fcd872ae66 (x86/bugs: Report AMD retbleed vulnerability)
 	if (cpu_matches(cpu_vuln_whitelist, NO_MELTDOWN))
