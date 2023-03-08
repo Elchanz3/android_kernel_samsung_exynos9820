@@ -23,5 +23,5 @@ if [[ -f "$IMAGE" ]]; then
 	mv out/dtb.img AnyKernel3/dtb
 	mv $IMAGE AnyKernel3/zImage
 	cd AnyKernel3
-	zip -r9 Kernel-N975F.zip .
+	zip -r9 Kernel-N975F-$(date +"%Y%m%d%H%M").zip .
 fi
