@@ -1335,7 +1335,7 @@ static int init_dm(struct exynos_cpufreq_domain *domain,
 	return register_exynos_dm_freq_scaler(domain->dm_type, dm_scaler);
 }
 
-static unsigned long arg_cpu_min_cl0 = 130000;
+static unsigned long arg_cpu_min_cl0 = 145000;
 
 static int __init cpufreq_read_cpu_min_cl0(char *cpu_min_cl0)
 {
@@ -1352,7 +1352,7 @@ static int __init cpufreq_read_cpu_min_cl0(char *cpu_min_cl0)
 }
 __setup("cpu_min_cl0=", cpufreq_read_cpu_min_cl0);
 
-unsigned long arg_cpu_min_cl1 = 377000;
+unsigned long arg_cpu_min_cl1 = 205000;
 
 static int __init cpufreq_read_cpu_min_cl1(char *cpu_min_cl1)
 {
@@ -1369,7 +1369,7 @@ static int __init cpufreq_read_cpu_min_cl1(char *cpu_min_cl1)
 }
 __setup("cpu_min_cl1=", cpufreq_read_cpu_min_cl1);
 
-static unsigned long arg_cpu_max_cl0 = 2342000;
+static unsigned long arg_cpu_max_cl0 = 2016000;
 
 static int __init cpufreq_read_cpu_max_cl0(char *cpu_max_cl0)
 {
@@ -1386,7 +1386,7 @@ static int __init cpufreq_read_cpu_max_cl0(char *cpu_max_cl0)
 }
 __setup("cpu_max_cl0=", cpufreq_read_cpu_max_cl0);
 
-unsigned long arg_cpu_max_cl1 = 2850000;
+unsigned long arg_cpu_max_cl1 = 2600000;
 
 static int __init cpufreq_read_cpu_max_cl1(char *cpu_max_cl1)
 {
@@ -1403,7 +1403,7 @@ static int __init cpufreq_read_cpu_max_cl1(char *cpu_max_cl1)
 }
 __setup("cpu_max_cl1=", cpufreq_read_cpu_max_cl1);
 
-unsigned long arg_cpu_max_cl2 = 3350000;
+unsigned long arg_cpu_max_cl2 = 3016000;
 
 static __init int init_domain(struct exynos_cpufreq_domain *domain,
 					struct device_node *dn)
