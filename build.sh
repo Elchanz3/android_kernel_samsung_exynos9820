@@ -11,9 +11,14 @@ export SEC_BUILD_CONF_VENDOR_BUILD_OS=12
 
 make O=out ARCH=arm64 exynos9820-d2s_defconfig
 
+DATE_START=$(date +"%s")
+
 make O=out ARCH=arm64 -j8
 
 $(pwd)/tools/mkdtimg cfg_create $(pwd)/out/dtb.img dt.configs/exynos9820.cfg -d ${DTB_DIR}/exynos
+
+DATE_END=$(date +"%s")
+DIFF=$(($DATE_END - $DATE_START))
 
 IMAGE="out/arch/arm64/boot/Image"
 if [[ -f "$IMAGE" ]]; then
