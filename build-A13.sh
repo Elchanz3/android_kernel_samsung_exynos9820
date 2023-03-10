@@ -11,6 +11,8 @@ export SEC_BUILD_CONF_VENDOR_BUILD_OS=13
 
 make O=out ARCH=arm64 exynos9820-d2s_defconfig
 
+make /home/chanz22/clang-r437112/bin/clang menuconfig
+
 make O=out ARCH=arm64 -j8
 
 $(pwd)/tools/mkdtimg cfg_create $(pwd)/out/dtb.img dt.configs/exynos9820.cfg -d ${DTB_DIR}/exynos
