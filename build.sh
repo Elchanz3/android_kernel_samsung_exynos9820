@@ -11,6 +11,8 @@ export SEC_BUILD_CONF_VENDOR_BUILD_OS=12
 
 make O=out ARCH=arm64 exynos9820-d2s_defconfig
 
+make /home/chanz22/clang-r437112/bin/clang menuconfig
+
 DATE_START=$(date +"%s")
 
 make O=out ARCH=arm64 -j8
