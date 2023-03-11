@@ -2,6 +2,8 @@
 
 mkdir out
 
+sudo apt-get update && sudo apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison clang-12 clang-14 ccache
+
 DTB_DIR=$(pwd)/out/arch/arm64/boot/dts
 mkdir ${DTB_DIR}/exynos
 
