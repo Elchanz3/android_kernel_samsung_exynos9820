@@ -16,7 +16,7 @@ supported.patchlevels=
 '; } # end properties
 
 # shell variables
-block=/dev/sda14/boot;
+block=/dev/block/by-name/boot;
 is_slot_device=0;
 ramdisk_compression=auto;
 
