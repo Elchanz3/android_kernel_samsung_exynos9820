@@ -16,7 +16,7 @@ supported.patchlevels=
 '; } # end properties
 
 # shell variables
-block=/dev/block/by-name/boot;
+block=$boot;
 is_slot_device=0;
 ramdisk_compression=auto;
 
