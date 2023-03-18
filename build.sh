@@ -1,26 +1,31 @@
-#!/bin/bash
-
+export ARCH=arm64
 mkdir out
 
-sudo apt-get update && apt-get install git ccache automake lzop bison gperf build-essential zip curl zlib1g-dev zlib1g-dev:i386 g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng -y
+echo"automatically installing the necessary dependencies for successful compilation"
 
-DTB_DIR=$(pwd)/out/arch/arm64/boot/dts
-mkdir ${DTB_DIR}/exynos
+sudo apt-get update && apt-get install git ccache automake lzop bison gperf build-essential zip curl zlib1g-dev zlib1g-dev:i386 g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng clang gcc-aarch64-linux-gnu zip -y
 
-export PLATFORM_VERSION=11
-export ANDROID_MAJOR_VERSION=r
-export SEC_BUILD_CONF_VENDOR_BUILD_OS=12
+echo"successful installation!.."
 
-make O=out ARCH=arm64 exynos9820-d2s_defconfig
+echo"now wait and see the magic"
 
-DATE_START=$(date +"%s")
+BUILD_CROSS_COMPILE=aarch64-linux-gnu-
+CLANG_TRIPLE=aarch64-linux-gnu-
+KERNEL_MAKE_ENV="DTC_EXT=$(pwd)/tools/dtc CONFIG_BUILD_ARM64_DT_OVERLAY=y"
 
-make O=out ARCH=arm64 -j8
+CLANG_VERSION=17
+LLVM_BIN=/workspace/clang/bin/
+
+make -j8 -C $(pwd) O=$(pwd)/out $KERNEL_MAKE_ENV ARCH=arm64 CROSS_COMPILE=$BUILD_CROSS_COMPILE \
+	CLANG_DIR=$LLVM_BIN LLVM=1 LLVM_IAS=1 CLANG_TRIPLE=$CLANG_TRIPLE exynos9820-d2s_defconfig
+
+make -j8 -C $(pwd) O=$(pwd)/out $KERNEL_MAKE_ENV ARCH=arm64 CROSS_COMPILE=$BUILD_CROSS_COMPILE LLVM=1 LLVM_IAS=1 \
+	CLANG_DIR=$LLVM_BIN CLANG_TRIPLE=$CLANG_TRIPLE oldconfig
+
+make -j8 -C $(pwd) O=$(pwd)/out $KERNEL_MAKE_ENV ARCH=arm64 CROSS_COMPILE=$BUILD_CROSS_COMPILE LLVM=1 LLVM_IAS=1 \
+	CLANG_DIR=$LLVM_BIN CLANG_TRIPLE=$CLANG_TRIPLE
 
 $(pwd)/tools/mkdtimg cfg_create $(pwd)/out/dtb.img dt.configs/exynos9820.cfg -d ${DTB_DIR}/exynos
-
-DATE_END=$(date +"%s")
-DIFF=$(($DATE_END - $DATE_START))
 
 IMAGE="out/arch/arm64/boot/Image"
 if [[ -f "$IMAGE" ]]; then
