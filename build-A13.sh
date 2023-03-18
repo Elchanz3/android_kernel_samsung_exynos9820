@@ -2,7 +2,7 @@
 
 mkdir out
 
-sudo apt-get update && sudo apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison clang-12 clang-14 ccache
+sudo apt-get update && apt-get install git ccache automake lzop bison gperf build-essential zip curl zlib1g-dev zlib1g-dev:i386 g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng -y
 
 DTB_DIR=$(pwd)/out/arch/arm64/boot/dts
 mkdir ${DTB_DIR}/exynos
