@@ -1404,25 +1404,25 @@ static int __init cpufreq_read_cpu_max_cl0(char *cpu_max_cl0)
 	printk("cpu_max_cl0=%lu\n", arg_cpu_max_cl0);
 	return ret;
 }
-__setup("cpu_max_cl1=", cpufreq_read_cpu_max_cl1);
+__setup("cpu_max_cl0=", cpufreq_read_cpu_max_cl0);
 
 /*Overclocking perf cores to 2600 MHz*/
-unsigned long arg_cpu_max_cl2 = 2600000; /*max_cpu_freq=2600 MHz*/
+unsigned long arg_cpu_max_cl1 = 2600000; /*max_cpu_freq=2600 MHz*/
 
-static __init int cpufreq_read_cpu_max_c2(char *cpu_max_cl2)
+static __init int cpufreq_read_cpu_max_cl1(char *cpu_max_cl1)
 {
 	unsigned long ui_khz;
 	int ret;
 
-	ret = kstrtoul(cpu_max_cl2, 0, &ui_khz);
+	ret = kstrtoul(cpu_max_cl1, 0, &ui_khz);
 	if (ret)
 		return -EINVAL;
 
-	arg_cpu_max_cl2 = ui_khz;
-	printk("cpu_max_cl2=%lu\n", arg_cpu_max_cl2);
+	arg_cpu_max_cl1 = ui_khz;
+	printk("cpu_max_cl1=%lu\n", arg_cpu_max_cl1);
 	return ret;
 }
-__setup("cpu_max_cl2=", cpufreq_read_cpu_max_cl2);
+__setup("cpu_max_cl1=", cpufreq_read_cpu_max_cl1);
 
 unsigned long arg_cpu_max_cl2 = 3016000;
 
